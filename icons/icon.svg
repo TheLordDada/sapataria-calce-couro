@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="leatherGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#422a25"/>
+      <stop offset="50%" stop-color="#2b1d1a"/>
+      <stop offset="100%" stop-color="#19100e"/>
+    </linearGradient>
+    <linearGradient id="terracottaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#df724f"/>
+      <stop offset="100%" stop-color="#b85334"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="url(#leatherGrad)"/>
+  <rect x="24" y="24" width="464" height="464" rx="90" fill="none" stroke="#b85334" stroke-width="4" stroke-dasharray="14 10" opacity="0.6"/>
+  <!-- Shoe / Boot Silhouette & Needle/Thread Stitching -->
+  <g transform="translate(64, 70) scale(0.75)" fill="#f5efe6">
+    <!-- Boot Outline -->
+    <path d="M120 40 C120 40 180 35 220 50 C235 55 240 85 240 140 L240 250 C260 250 310 260 360 290 C410 320 440 360 440 390 C440 420 410 430 360 430 L80 430 C60 430 50 410 50 380 L50 200 C50 120 70 40 120 40 Z" fill="url(#terracottaGrad)"/>
+    <!-- Sole -->
+    <path d="M40 420 L450 420 C465 420 470 440 455 455 C430 475 360 475 290 470 C220 465 130 475 70 475 C45 475 35 455 40 420 Z" fill="#19100e"/>
+    <!-- Heel -->
+    <path d="M42 450 L140 450 L135 485 C135 495 125 500 110 500 L55 500 C40 500 38 485 42 450 Z" fill="#0f0a09"/>
+    <!-- Stitching details -->
+    <path d="M70 200 C120 220 180 230 230 250" fill="none" stroke="#f5efe6" stroke-width="6" stroke-dasharray="10 8"/>
+    <path d="M240 140 C280 200 320 270 380 320" fill="none" stroke="#f5efe6" stroke-width="6" stroke-dasharray="10 8"/>
+  </g>
+  <text x="256" y="445" font-family="'Georgia', serif" font-size="34" font-weight="bold" fill="#f5efe6" text-anchor="middle" letter-spacing="2">CALCE COURO</text>
+</svg>
