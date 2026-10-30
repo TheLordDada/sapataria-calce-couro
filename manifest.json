@@ -1,0 +1,18 @@
+{
+  "name": "Sapataria Calce Couro",
+  "short_name": "Calce Couro",
+  "description": "Sistema de Gestão de Ordens de Serviço - Calce Couro Consertos e Restaurações",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#2b1d1a",
+  "theme_color": "#2b1d1a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
