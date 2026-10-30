@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Sapataria Calce Couro</title>
+
+  <!-- PWA & Meta Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2b1d1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Calce Couro">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Toast Flutuante de Sincronizacao em Tempo Real (Estilo TaskFlow) -->
+  <div id="syncToast" class="sync-toast-box">
+    <i class="fa-solid fa-cloud-arrow-down" id="syncToastIcon"></i>
+    <span id="syncToastText">Sincronizado com a oficina!</span>
+  </div>
+
+
+  <!-- CABEÇALHO DA OFICINA -->
+  <header class="top-header">
+    <div class="header-main">
+      <div class="logo-box">
+        <span class="logo-icon">👞</span>
+        <div>
+          <h1 class="logo-title">Calce Couro</h1>
+          <p class="logo-sub">Consertos de Sapatos & Bolsas</p>
+        </div>
+      </div>
+
+      <div class="header-buttons">
+        <button class="btn-header-caixa" id="btnAbrirCaixaModal" title="Ver dinheiro e caixa">
+          <i class="fa-solid fa-wallet"></i>
+          <span>Meu Caixa</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Barra de Status da Sincronização em Tempo Real (Zero F5) -->
+    <div class="header-actions-row">
+      <button class="sync-status-pill" id="btnSyncCloud" title="Clique para sincronizar tudo agora">
+        <span class="sync-dot pulse-green" id="syncDot"></span>
+        <span id="syncStatusLabel">Ao Vivo • Sincronizado</span>
+        <i class="fa-solid fa-arrows-rotate sync-icon-spin" id="syncIcon"></i>
+      </button>
+    </div>
+
+    <!-- Endereço e Contato Rápido -->
+    <div class="header-shop-info">
+      <span><i class="fa-solid fa-location-dot"></i> Av. Prestes Maia, 651</span>
+      <span><i class="fa-brands fa-whatsapp"></i> (18) 99753-2876</span>
+      <span><i class="fa-solid fa-phone"></i> (18) 3304-6049</span>
+    </div>
+  </header>
+
+  <!-- BOTÃO GIGANTE DE NOVO CONSERTO -->
+  <div class="hero-action-container">
+    <button class="btn-big-novo-conserto" id="btnAbrirNovoConserto" onclick="abrirNovoConserto()">
+      <div class="btn-big-icon">
+        <i class="fa-solid fa-plus"></i>
+      </div>
+      <div class="btn-big-texts">
+        <span class="btn-big-title">+ NOVO CONSERTO</span>
+        <span class="btn-big-desc">Toque aqui para dar entrada em um sapato ou bolsa</span>
+      </div>
+      <i class="fa-solid fa-chevron-right btn-big-arrow"></i>
+    </button>
+  </div>
+
+  <!-- FILTROS COM BOTÕES GRANDES E COLORIDOS -->
+  <nav class="filter-tabs">
+    <button class="filter-btn active" data-tab="ativos">
+      <span class="f-icon">🟡</span>
+      <span class="f-text">Na Loja</span>
+      <span class="f-count" id="countAtivos">0</span>
+    </button>
+
+    <button class="filter-btn" data-tab="prontos">
+      <span class="f-icon">🟢</span>
+      <span class="f-text">Prontos</span>
+      <span class="f-count badge-green" id="countProntos">0</span>
+    </button>
+
+    <button class="filter-btn btn-alerta-tab" data-tab="atrasados">
+      <span class="f-icon">🔴</span>
+      <span class="f-text">Atrasados</span>
+      <span class="f-count badge-red" id="countAtrasados">0</span>
+    </button>
+
+    <button class="filter-btn" data-tab="finalizados">
+      <span class="f-icon">🏁</span>
+      <span class="f-text">Entregues</span>
+      <span class="f-count" id="countFinalizados">0</span>
+    </button>
+  </nav>
+
+  <!-- BUSCA RÁPIDA -->
+  <div class="search-section">
+    <div class="search-input-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="inputBusca" placeholder="Pesquisar cliente ou número do sapato..." autocomplete="off">
+      <button class="btn-clear-search" id="btnClearSearch" style="display: none;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL / FORMULÁRIO FÁCIL: NOVO CONSERTO        -->
+  <!-- ============================================== -->
+  <div class="modal-backdrop" id="modalNovoConserto">
+    <div class="modal-card modal-form-card">
+      
+      <div class="modal-header-simple">
+        <div class="modal-header-title">
+          <span class="modal-emoji">👞</span>
+          <h2 id="tituloModalConserto">Novo Conserto</h2>
+        </div>
+        <button class="btn-close-modal" onclick="fecharModalConserto()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="formConserto" class="form-easy">
+        <input type="hidden" id="editOSId" value="">
+
+        <!-- PASSO 1: CLIENTE -->
+        <div class="step-card">
+          <div class="step-header">
+            <span class="step-num">1</span>
+            <span class="step-title">De quem é o sapato?</span>
+          </div>
+
+          <div class="field-box">
+            <label>Nome do Cliente:</label>
+            <input type="text" id="campoClienteNome" placeholder="Ex: Seu João ou Dona Maria" required autocomplete="off">
+          </div>
+
+          <div class="field-box">
+            <label>WhatsApp / Telefone para avisar:</label>
+            <input type="tel" id="campoClienteWhats" placeholder="(18) 99999-9999" maxlength="15" required>
+          </div>
+        </div>
+
+        <!-- PASSO 2: O QUE VAI CONSERTAR -->
+        <div class="step-card">
+          <div class="step-header">
+            <span class="step-num">2</span>
+            <span class="step-title">O que vai consertar? (Clique no que for)</span>
+          </div>
+
+          <!-- Tipo de calçado -->
+          <div class="category-buttons" id="tipoItemButtons">
+            <button type="button" class="btn-cat active" data-tipo="Sapato"><span class="e">👞</span> Sapato</button>
+            <button type="button" class="btn-cat" data-tipo="Bota"><span class="e">🥾</span> Bota</button>
+            <button type="button" class="btn-cat" data-tipo="Tênis"><span class="e">👟</span> Tênis</button>
+            <button type="button" class="btn-cat" data-tipo="Bolsa"><span class="e">👜</span> Bolsa</button>
+            <button type="button" class="btn-cat" data-tipo="Sandália"><span class="e">👡</span> Sandália</button>
+            <button type="button" class="btn-cat" data-tipo="Outro"><span class="e">📦</span> Outro</button>
+          </div>
+
+          <!-- Serviços rápidos com preço sugerido -->
+          <label style="font-size: 13px; font-weight: 700; color: #6e5e5b; margin: 10px 0 6px; display: block;">Serviços mais comuns (Toque para adicionar):</label>
+          <div class="service-quick-buttons">
+            <button type="button" class="btn-service-add" data-nome="Meia Sola" data-preco="80.00">
+              <span>👞 Meia Sola</span>
+              <strong>+ R$ 80</strong>
+            </button>
+            <button type="button" class="btn-service-add" data-nome="Troca de Salto" data-preco="45.00">
+              <span>👠 Troca de Salto</span>
+              <strong>+ R$ 45</strong>
+            </button>
+            <button type="button" class="btn-service-add" data-nome="Costura e Colagem" data-preco="30.00">
+              <span>🧵 Costura/Cola</span>
+              <strong>+ R$ 30</strong>
+            </button>
+            <button type="button" class="btn-service-add" data-nome="Troca de Zíper" data-preco="50.00">
+              <span>👜 Zíper Novo</span>
+              <strong>+ R$ 50</strong>
+            </button>
+            <button type="button" class="btn-service-add" data-nome="Higienização/Pintura" data-preco="60.00">
+              <span>✨ Higienização</span>
+              <strong>+ R$ 60</strong>
+            </button>
+            <button type="button" class="btn-service-add" data-nome="Ajuste / Alargamento" data-preco="35.00">
+              <span>📐 Ajustar Calçado</span>
+              <strong>+ R$ 35</strong>
+            </button>
+          </div>
+
+          <!-- Botão para escrever serviço personalizado -->
+          <button type="button" class="btn-outro-servico" id="btnAdicionarOutroServico">
+            <i class="fa-solid fa-pencil"></i> + Escrever outro serviço diferente
+          </button>
+
+          <!-- Lista do que já foi adicionado -->
+          <div class="servicos-selecionados-box">
+            <label>O que está sendo feito neste pedido:</label>
+            <div id="listaServicosEscolhidos" class="added-services-list">
+              <!-- Preenchido via JavaScript -->
+            </div>
+          </div>
+
+          <!-- Observações do estado do calçado -->
+          <div class="field-box" style="margin-top: 10px;">
+            <label>Detalhes ou avarias já existentes (opcional):</label>
+            <input type="text" id="campoObservacao" placeholder="Ex: Bico já ralado, salto gasto do lado direito..." autocomplete="off">
+          </div>
+
+          <!-- Foto rápida antes do conserto -->
+          <div class="foto-box-simple">
+            <label class="btn-foto-upload">
+              <i class="fa-solid fa-camera"></i>
+              <span>Tirar ou Escolher Foto do Calçado</span>
+              <input type="file" id="campoFotoInput" accept="image/*" capture="environment" style="display: none;">
+            </label>
+            <div id="fotoPreviewBox" style="display: none;" class="foto-preview-box">
+              <img id="imgFotoPreview" src="" alt="Prévia">
+              <button type="button" class="btn-apagar-foto" id="btnApagarFoto"><i class="fa-solid fa-trash"></i> Apagar Foto</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASSO 3: QUANDO FICA PRONTO & VALOR -->
+        <div class="step-card highlight">
+          <div class="step-header">
+            <span class="step-num">3</span>
+            <span class="step-title">Fica pronto quando e quanto custa?</span>
+          </div>
+
+          <!-- Botões rápidos de quando fica pronto -->
+          <label style="font-size: 13px; font-weight: 700; color: #6e5e5b; margin-bottom: 6px; display: block;">Fica pronto quando?</label>
+          <div class="fast-date-buttons" id="fastDateButtons">
+            <button type="button" class="btn-fast-date" data-dias="1">Amanhã</button>
+            <button type="button" class="btn-fast-date active" data-dias="2">Em 2 dias</button>
+            <button type="button" class="btn-fast-date" data-dias="3">Em 3 dias</button>
+            <button type="button" class="btn-fast-date" data-dias="7">Semana que vem</button>
+          </div>
+
+          <div class="date-pick-custom">
+            <input type="date" id="campoDataEntrega" required>
+            <input type="time" id="campoHoraEntrega" value="17:00">
+          </div>
+
+          <!-- Caixa de Valor e Entrada -->
+          <div class="money-summary-box">
+            <div class="money-line">
+              <span>VALOR TOTAL DO SERVIÇO:</span>
+              <strong id="lblFormValorTotal">R$ 0,00</strong>
+            </div>
+
+            <div class="money-line-input">
+              <label>O cliente pagou algum adiantamento hoje?</label>
+              <div class="input-money-wrapper">
+                <span>R$</span>
+                <input type="number" id="campoValorEntrada" value="0.00" min="0" step="0.50">
+              </div>
+            </div>
+
+            <div class="money-line total-restante-highlight">
+              <span>VAI FICAR FALTANDO PAGAR:</span>
+              <strong id="lblFormValorRestante">R$ 0,00</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTÕES DO FINAL DO FORMULÁRIO -->
+        <div class="form-save-footer">
+          <button type="button" class="btn-cancelar-modal" onclick="fecharModalConserto()">Cancelar</button>
+          <button type="submit" class="btn-salvar-conserto">
+            <i class="fa-solid fa-check"></i>
+            <span>SALVAR CONSERTO</span>
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- LISTA DE SAPATOS / BOLSAS EM ANDAMENTO         -->
+  <!-- ============================================== -->
+  <main class="cards-list-section">
+    <div id="gridCardsConsertos" class="cards-grid">
+      <!-- Cards preenchidos dinamicamente pelo JavaScript -->
+    </div>
+
+    <!-- Mensagem de lista vazia -->
+    <div class="empty-box" id="boxListaVazia" style="display: none;">
+      <span class="empty-icon">👞✨</span>
+      <h3 id="emptyTitle">Tudo em dia!</h3>
+      <p id="emptyDesc">Nenhum calçado nesta categoria no momento.</p>
+      <button class="btn-novo-vazio" onclick="abrirNovoConserto()"><i class="fa-solid fa-plus"></i> Novo Conserto</button>
+    </div>
+  </main>
+
+  <!-- ============================================== -->
+  <!-- MODAL: CUPOM DE IMPRESSÃO (58mm - TÉRMICA)     -->
+  <!-- ============================================== -->
+  <div class="modal-backdrop" id="modalCupom">
+    <div class="modal-card modal-cupom-card">
+      <div class="modal-header-simple">
+        <div class="modal-header-title">
+          <span class="modal-emoji">🖨️</span>
+          <h2>Cupom do Calçado</h2>
+        </div>
+        <button class="btn-close-modal" onclick="fecharModalCupom()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="cupom-wrapper-scroll">
+        <!-- Cupom formatado para impressora de bobina de 58mm (32 colunas) -->
+        <div class="ticket-thermal" id="ticketPrintArea">
+          <div class="tk-center tk-bold tk-title">SAPATARIA CALCE COURO</div>
+          <div class="tk-center tk-small">Consertos e Restauracoes</div>
+          <div class="tk-center tk-small">Calcados e Bolsas</div>
+          <div class="tk-center tk-small">Av. Prestes Maia, n 651</div>
+          <div class="tk-center tk-small">Tel: (18) 3304-6049</div>
+          <div class="tk-center tk-small">Whats: (18) 99753-2876</div>
+          <div class="tk-divider">================================</div>
+          <div class="tk-center tk-large tk-bold" id="cupomNumeroOS">PEDIDO #0</div>
+          <div class="tk-divider">================================</div>
+          <div class="tk-row"><span>Entrada:</span> <span id="cupomDataEntrada">--/--/--</span></div>
+          <div class="tk-row"><span>Retirar em:</span> <span class="tk-bold" id="cupomPrevisao">--/--/--</span></div>
+          <div class="tk-row"><span>Cliente:</span> <span class="tk-bold" id="cupomCliente">--</span></div>
+          <div class="tk-row"><span>Telefone:</span> <span id="cupomTelefone">--</span></div>
+          <div class="tk-divider">--------------------------------</div>
+          <div class="tk-row tk-bold"><span>SERVICO</span><span>VALOR</span></div>
+          <div class="tk-divider">--------------------------------</div>
+          <div id="cupomListaServicos">
+            <!-- Itens listados aqui -->
+          </div>
+          <div class="tk-divider">--------------------------------</div>
+          <div class="tk-row"><span>TOTAL:</span> <span class="tk-bold" id="cupomTotal">R$ 0,00</span></div>
+          <div class="tk-row"><span>ENTRADA PAGA:</span> <span id="cupomEntrada">R$ 0,00</span></div>
+          <div class="tk-row tk-huge tk-bold">
+            <span>A PAGAR:</span>
+            <span id="cupomRestante">R$ 0,00</span>
+          </div>
+          <div class="tk-divider">================================</div>
+          <div id="cupomObsBloco" class="tk-small" style="margin: 6px 0;">
+            <strong>OBS:</strong> <span id="cupomObservacao">Sem observações</span>
+          </div>
+          <div class="tk-center tk-small" style="margin-top: 10px; line-height: 1.2;">
+            Obrigado pela confianca!<br>
+            Apresente este papel para retirar.<br>
+            Calcados nao retirados em 90 dias<br>poderao ser doados.
+          </div>
+        </div>
+      </div>
+
+      <div class="cupom-actions-footer">
+        <button class="btn-imprimir-termica" id="btnImprimirTermica"><i class="fa-solid fa-receipt"></i> Imprimir Bobina Térmica (58mm)</button>
+        <button class="btn-imprimir-a4" id="btnImprimirA4"><i class="fa-solid fa-file-lines"></i> Imprimir Folha A4 (2 Vias)</button>
+        <button class="btn-imprimir-rawbt" id="btnImprimirRawBT"><i class="fa-solid fa-bolt"></i> RawBT (Bluetooth)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: FOTO GRANDE                             -->
+  <!-- ============================================== -->
+  <div class="modal-backdrop" id="modalFotoGrande" onclick="fecharModalFoto()">
+    <div class="foto-zoom-box">
+      <img id="imgFotoGrande" src="" alt="Sapato em tamanho real">
+      <button class="btn-fechar-foto"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: CAIXA DA SAPATARIA                      -->
+  <!-- ============================================== -->
+  <div class="modal-backdrop" id="modalCaixa">
+    <div class="modal-card">
+      <div class="modal-header-simple">
+        <div class="modal-header-title">
+          <span class="modal-emoji">💰</span>
+          <h2>Caixa da Sapataria</h2>
+        </div>
+        <button class="btn-close-modal" onclick="fecharModalCaixa()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="caixa-content">
+        <div class="caixa-card green">
+          <div class="c-title">Dinheiro que entrou hoje:</div>
+          <div class="c-val" id="caixaEntradasHoje">R$ 0,00</div>
+        </div>
+
+        <div class="caixa-card terracotta">
+          <div class="c-title">Dinheiro para receber dos sapatos na loja:</div>
+          <div class="c-val" id="caixaSaldoLoja">R$ 0,00</div>
+        </div>
+
+        <div class="caixa-card gold">
+          <div class="c-title">Total de serviços deste mês:</div>
+          <div class="c-val" id="caixaMes">R$ 0,00</div>
+        </div>
+
+        <div class="backup-box">
+          <h4><i class="fa-solid fa-shield-halved"></i> Guardar Cópia dos Dados (Backup)</h4>
+          <p>Para não perder os consertos se trocar de celular:</p>
+          <div class="backup-btns">
+            <button class="btn-bkp" id="btnExportarBackup"><i class="fa-solid fa-download"></i> Salvar Cópia (Backup)</button>
+            <label class="btn-bkp">
+              <i class="fa-solid fa-upload"></i> Restaurar Cópia
+              <input type="file" id="inputImportarBackup" accept=".json" style="display: none;">
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="db.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
