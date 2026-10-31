@@ -498,6 +498,115 @@ async function salvarFotoDepoisModal() {
 }
 
 
+
+// ==================================================
+// SUPORTE INTELIGENTE DE CÂMERA (PC WEBCAM & CELULAR ANDROID)
+// ==================================================
+let webcamStreamGlobal = null;
+let webcamSlotAlvo = null;
+
+function ehDispositivoMovel() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+async function tirarFotoInteligente(slot, inputId) {
+  // Se for celular (Android APK ou navegador mobile), aciona diretamente o input nativo da camera
+  if (ehDispositivoMovel()) {
+    const input = document.getElementById(inputId);
+    if (input) input.click();
+    return;
+  }
+
+  // Se estiver no Computador (PC / Notebook), tenta abrir a webcam ao vivo
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    try {
+      webcamSlotAlvo = slot;
+      const modal = document.getElementById('modalWebcamAoVivo');
+      const notice = document.getElementById('webcamLoadingNotice');
+      if (notice) notice.style.display = 'flex';
+      if (modal) modal.classList.add('open');
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+
+      webcamStreamGlobal = stream;
+      const video = document.getElementById('videoWebcamStream');
+      if (video) {
+        video.srcObject = stream;
+        video.onloadedmetadata = () => {
+          if (notice) notice.style.display = 'none';
+          video.play();
+        };
+      }
+      return;
+    } catch (err) {
+      console.warn('Webcam nao acessivel no PC, abrindo seletor de arquivos:', err);
+      fecharWebcamModal();
+      const input = document.getElementById(inputId);
+      if (input) input.click();
+      return;
+    }
+  }
+
+  // Fallback se nao houver suporte a getUserMedia
+  const input = document.getElementById(inputId);
+  if (input) input.click();
+}
+
+function fecharWebcamModal(e) {
+  if (e && e.target && e.target !== document.getElementById('modalWebcamAoVivo')) return;
+  if (webcamStreamGlobal) {
+    webcamStreamGlobal.getTracks().forEach(track => track.stop());
+    webcamStreamGlobal = null;
+  }
+  const modal = document.getElementById('modalWebcamAoVivo');
+  if (modal) modal.classList.remove('open');
+  const video = document.getElementById('videoWebcamStream');
+  if (video) video.srcObject = null;
+}
+
+function capturarFotoWebcam() {
+  const video = document.getElementById('videoWebcamStream');
+  if (!video || !video.videoWidth) {
+    alert('Aguarde a câmera iniciar...');
+    return;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+  if (webcamSlotAlvo === 'antes') {
+    app.fotoAntesBase64 = dataUrl;
+    app.fotoBase64 = dataUrl;
+    const img = document.getElementById('imgSlotAntes');
+    const box = document.getElementById('previewSlotAntes');
+    if (img) img.src = dataUrl;
+    if (box) box.style.display = 'block';
+  } else if (webcamSlotAlvo === 'depois') {
+    app.fotoDepoisBase64 = dataUrl;
+    const img = document.getElementById('imgSlotDepois');
+    const box = document.getElementById('previewSlotDepois');
+    if (img) img.src = dataUrl;
+    if (box) box.style.display = 'block';
+  } else if (webcamSlotAlvo === 'depois_modal') {
+    app.fotoDepoisModalBase64 = dataUrl;
+    const img = document.getElementById('imgFotoDepoisModal');
+    const box = document.getElementById('previewFotoDepoisModalBox');
+    if (img) img.src = dataUrl;
+    if (box) box.style.display = 'block';
+  }
+
+  fecharWebcamModal();
+  tocarSomSucesso();
+}
+
+
 function abrirNovoConserto() {
   const form = document.getElementById('formConserto');
   if (form) form.reset();
@@ -1687,3 +1796,8 @@ window.abrirModalFotoDepois = abrirModalFotoDepois;
 window.fecharModalFotoDepois = fecharModalFotoDepois;
 window.processarFotoDepoisModal = processarFotoDepoisModal;
 window.salvarFotoDepoisModal = salvarFotoDepoisModal;
+
+
+window.tirarFotoInteligente = tirarFotoInteligente;
+window.fecharWebcamModal = fecharWebcamModal;
+window.capturarFotoWebcam = capturarFotoWebcam;
