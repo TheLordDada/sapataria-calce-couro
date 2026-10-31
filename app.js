@@ -10,6 +10,9 @@ const app = {
   tipoCalcadoEscolhido: 'Sapato',
   servicosEscolhidos: [],
   fotoBase64: '',
+  fotoAntesBase64: '',
+  fotoDepoisBase64: '',
+  fotoDepoisModalBase64: '',
   ordemParaImprimir: null
 };
 
@@ -296,6 +299,205 @@ function apagarFotoForm() {
 // ==================================================
 // ABERTURA E SALVAMENTO DO NOVO CONSERTO
 // ==================================================
+
+// ==================================================
+// SERVICO PERSONALIZADO / OUTRO SERVICO (MODAL)
+// ==================================================
+function abrirModalOutroServico() {
+  const modal = document.getElementById('modalOutroServico');
+  const inpNome = document.getElementById('inputCustomServicoNome');
+  const inpPreco = document.getElementById('inputCustomServicoPreco');
+  if (inpNome) inpNome.value = '';
+  if (inpPreco) inpPreco.value = '';
+  if (modal) {
+    modal.classList.add('open');
+    setTimeout(() => { if (inpNome) inpNome.focus(); }, 150);
+  }
+}
+
+function fecharModalOutroServico(e) {
+  if (e && e.target && e.target !== document.getElementById('modalOutroServico')) return;
+  const modal = document.getElementById('modalOutroServico');
+  if (modal) modal.classList.remove('open');
+}
+
+function preencherServicoRapido(nome, valor) {
+  const inpNome = document.getElementById('inputCustomServicoNome');
+  const inpPreco = document.getElementById('inputCustomServicoPreco');
+  if (inpNome) inpNome.value = nome;
+  if (inpPreco) inpPreco.value = Number(valor).toFixed(2);
+}
+
+function definirPrecoCustom(valor) {
+  const inpPreco = document.getElementById('inputCustomServicoPreco');
+  if (inpPreco) inpPreco.value = Number(valor).toFixed(2);
+}
+
+function confirmarServicoCustomizado() {
+  const inpNome = document.getElementById('inputCustomServicoNome');
+  const inpPreco = document.getElementById('inputCustomServicoPreco');
+  const nome = (inpNome ? inpNome.value : '').trim();
+  const preco = parseFloat(inpPreco ? inpPreco.value : 0) || 0;
+
+  if (!nome) {
+    alert('Por favor, informe o nome do serviço a ser feito.');
+    if (inpNome) inpNome.focus();
+    return;
+  }
+
+  app.servicosEscolhidos.push({
+    nome: 'Calçado / Artigo',
+    servico: nome,
+    valor: preco
+  });
+
+  renderizarServicosEscolhidos();
+  fecharModalOutroServico();
+  tocarSomSucesso();
+}
+
+// ==================================================
+// FOTOS ANTES E DEPOIS DO CONSERTO
+// ==================================================
+function redimensionarImagemFile(file, maxWidth, callback) {
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth || height > maxWidth) {
+        if (width > height) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        } else {
+          width = Math.round((width * maxWidth) / height);
+          height = maxWidth;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+      callback(dataUrl);
+    };
+    img.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function processarFotoSlot(e, tipo) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  redimensionarImagemFile(file, 960, function(dataUrl) {
+    if (tipo === 'antes') {
+      app.fotoAntesBase64 = dataUrl;
+      app.fotoBase64 = dataUrl; // fallback
+      const img = document.getElementById('imgSlotAntes');
+      const box = document.getElementById('previewSlotAntes');
+      if (img) img.src = dataUrl;
+      if (box) box.style.display = 'block';
+    } else {
+      app.fotoDepoisBase64 = dataUrl;
+      const img = document.getElementById('imgSlotDepois');
+      const box = document.getElementById('previewSlotDepois');
+      if (img) img.src = dataUrl;
+      if (box) box.style.display = 'block';
+    }
+  });
+}
+
+function apagarFotoSlot(tipo) {
+  if (tipo === 'antes') {
+    app.fotoAntesBase64 = '';
+    const img = document.getElementById('imgSlotAntes');
+    const box = document.getElementById('previewSlotAntes');
+    const cam = document.getElementById('campoFotoAntesCam');
+    const gal = document.getElementById('campoFotoAntesGal');
+    if (img) img.src = '';
+    if (box) box.style.display = 'none';
+    if (cam) cam.value = '';
+    if (gal) gal.value = '';
+  } else {
+    app.fotoDepoisBase64 = '';
+    const img = document.getElementById('imgSlotDepois');
+    const box = document.getElementById('previewSlotDepois');
+    const cam = document.getElementById('campoFotoDepoisCam');
+    const gal = document.getElementById('campoFotoDepoisGal');
+    if (img) img.src = '';
+    if (box) box.style.display = 'none';
+    if (cam) cam.value = '';
+    if (gal) gal.value = '';
+  }
+}
+
+// Modal Foto Depois (Para anexar a um conserto já existente)
+function abrirModalFotoDepois(osId) {
+  const hidden = document.getElementById('editFotoDepoisOSId');
+  if (hidden) hidden.value = osId;
+  app.fotoDepoisModalBase64 = '';
+  const prevBox = document.getElementById('previewFotoDepoisModalBox');
+  const imgPrev = document.getElementById('imgFotoDepoisModal');
+  if (prevBox) prevBox.style.display = 'none';
+  if (imgPrev) imgPrev.src = '';
+  const cam = document.getElementById('inputFotoDepoisModalCam');
+  const gal = document.getElementById('inputFotoDepoisModalGal');
+  if (cam) cam.value = '';
+  if (gal) gal.value = '';
+
+  const modal = document.getElementById('modalFotoDepois');
+  if (modal) modal.classList.add('open');
+}
+
+function fecharModalFotoDepois(e) {
+  if (e && e.target && e.target !== document.getElementById('modalFotoDepois')) return;
+  const modal = document.getElementById('modalFotoDepois');
+  if (modal) modal.classList.remove('open');
+}
+
+function processarFotoDepoisModal(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  redimensionarImagemFile(file, 960, function(dataUrl) {
+    app.fotoDepoisModalBase64 = dataUrl;
+    const img = document.getElementById('imgFotoDepoisModal');
+    const box = document.getElementById('previewFotoDepoisModalBox');
+    if (img) img.src = dataUrl;
+    if (box) box.style.display = 'block';
+  });
+}
+
+async function salvarFotoDepoisModal() {
+  const hidden = document.getElementById('editFotoDepoisOSId');
+  const osId = hidden ? hidden.value : null;
+  if (!osId) return;
+
+  if (!app.fotoDepoisModalBase64) {
+    alert('Por favor, tire ou escolha uma foto primeiro.');
+    return;
+  }
+
+  const os = await obterOSPorId(osId);
+  if (!os) {
+    alert('Conserto não encontrado.');
+    return;
+  }
+
+  os.foto_depois = app.fotoDepoisModalBase64;
+  await salvarOS(os);
+  fecharModalFotoDepois();
+  tocarSomSucesso();
+  await carregarOrdens();
+  alert('✨ Foto de conserto pronto (DEPOIS) salva com sucesso!');
+}
+
+
 function abrirNovoConserto() {
   const form = document.getElementById('formConserto');
   if (form) form.reset();
@@ -306,7 +508,10 @@ function abrirNovoConserto() {
 
   app.servicosEscolhidos = [];
   app.fotoBase64 = '';
-  apagarFotoForm();
+  app.fotoAntesBase64 = '';
+  app.fotoDepoisBase64 = '';
+  apagarFotoSlot('antes');
+  apagarFotoSlot('depois');
   definirDataPadrao(2);
 
   // Adiciona um servico inicial sugerido
@@ -361,7 +566,9 @@ async function salvarConserto(e) {
   os.previsao_retirada_hora = previsaoHora;
   os.itens = app.servicosEscolhidos;
   os.observacoes = obs;
-  os.foto_base64 = app.fotoBase64 || os.foto_base64 || '';
+  os.foto_antes = app.fotoAntesBase64 || os.foto_antes || app.fotoBase64 || '';
+  os.foto_depois = app.fotoDepoisBase64 || os.foto_depois || '';
+  os.foto_base64 = os.foto_antes || os.foto_depois || os.foto_base64 || '';
   os.valor_entrada = valorEntrada;
 
   const salva = await salvarOS(os);
@@ -545,11 +752,47 @@ function criarCardSapato(os) {
   const primeiroItem = os.itens && os.itens[0] ? os.itens[0] : { nome: 'Calçado', servico: 'Conserto' };
   const totalItens = (os.itens || []).length;
   const outrosItensTexto = totalItens > 1 ? ` (+${totalItens - 1} serviços)` : '';
+  // Fotos Antes e Depois
+  const temAntes = Boolean(os.foto_antes || os.foto_base64);
+  const temDepois = Boolean(os.foto_depois);
+  const srcAntes = os.foto_antes || os.foto_base64 || '';
+  const srcDepois = os.foto_depois || '';
 
-  // Foto thumbnail
-  const fotoHtml = os.foto_base64
-    ? `<img src="${os.foto_base64}" class="c-shoe-thumb" alt="Sapato" onclick="abrirFotoGrande('${os.foto_base64}')">`
-    : `<div class="c-shoe-thumb" style="background:#f1eae2; display:flex; align-items:center; justify-content:center; font-size:26px;">👞</div>`;
+  let fotoHtml = '';
+  if (temAntes && temDepois) {
+    fotoHtml = `
+      <div class="c-dual-photo-box">
+        <div class="c-photo-thumb-wrap" onclick="abrirFotoGrande('${srcAntes}')" title="Foto ANTES (Entrada)">
+          <span class="photo-mini-tag antes">ANTES</span>
+          <img src="${srcAntes}" class="c-shoe-thumb-mini" alt="Antes">
+        </div>
+        <div class="c-photo-thumb-wrap" onclick="abrirFotoGrande('${srcDepois}')" title="Foto DEPOIS (Pronto)">
+          <span class="photo-mini-tag depois">DEPOIS</span>
+          <img src="${srcDepois}" class="c-shoe-thumb-mini" alt="Depois">
+        </div>
+      </div>
+    `;
+  } else if (temAntes) {
+    fotoHtml = `
+      <div class="c-single-photo-box">
+        <div class="c-photo-thumb-wrap" onclick="abrirFotoGrande('${srcAntes}')" title="Foto ANTES (Entrada)">
+          <span class="photo-mini-tag antes">ANTES</span>
+          <img src="${srcAntes}" class="c-shoe-thumb" alt="Sapato">
+        </div>
+      </div>
+    `;
+  } else if (temDepois) {
+    fotoHtml = `
+      <div class="c-single-photo-box">
+        <div class="c-photo-thumb-wrap" onclick="abrirFotoGrande('${srcDepois}')" title="Foto DEPOIS (Pronto)">
+          <span class="photo-mini-tag depois">DEPOIS</span>
+          <img src="${srcDepois}" class="c-shoe-thumb" alt="Sapato">
+        </div>
+      </div>
+    `;
+  } else {
+    fotoHtml = `<div class="c-shoe-thumb" style="background:#f1eae2; display:flex; align-items:center; justify-content:center; font-size:26px;">👞</div>`;
+  }
 
   // Saldo
   const temSaldo = os.valor_restante > 0;
@@ -600,6 +843,13 @@ function criarCardSapato(os) {
         <i class="fa-solid fa-print"></i>
         <span>CUPOM</span>
       </button>
+
+      ${!temDepois && os.status !== 'Entregue' ? `
+        <button class="btn-c-action btn-c-foto-depois" onclick="abrirModalFotoDepois(${os.id})" title="Tirar foto do trabalho pronto">
+          <i class="fa-solid fa-camera-retro"></i>
+          <span>+ FOTO DEPOIS</span>
+        </button>
+      ` : ''}
 
       ${os.status !== 'Entregue' ? `
         <button class="btn-c-action btn-c-entregar" onclick="receberEEntregar(${os.id})">
@@ -1330,21 +1580,23 @@ function executarLogin() {
 
   if (perfilAuthSelecionado === 'pais') {
     const pinCustom = localStorage.getItem('calce_pin_pais');
-    if (pinDigitado === '6049' || pinDigitado === '1234' || (pinCustom && pinDigitado === pinCustom)) {
+    // Senha do Balcao da Oficina: 112329
+    if (pinDigitado === '112329' || pinDigitado === '6049' || pinDigitado === '1234' || (pinCustom && pinDigitado === pinCustom)) {
       autorizado = true;
-      nomeExibicao = 'Oficina (Pais)';
+      nomeExibicao = 'Balcão da Oficina';
     }
   } else {
     const pinCustom = localStorage.getItem('calce_pin_admin');
-    if (pinDigitado === 'admin' || pinDigitado === '9975' || pinDigitado === 'admin2026' || (pinCustom && pinDigitado === pinCustom)) {
+    // Senha de Administrador: 391586
+    if (pinDigitado === '391586' || pinDigitado === 'admin' || pinDigitado === 'admin2026' || (pinCustom && pinDigitado === pinCustom)) {
       autorizado = true;
-      nomeExibicao = 'Administrador';
+      nomeExibicao = 'Administrador Geral';
     }
   }
 
   if (!autorizado) {
     if (err) {
-      err.textContent = perfilAuthSelecionado === 'pais' ? 'PIN incorreto. Tente 6049.' : 'Senha incorreta. Tente admin.';
+      err.textContent = perfilAuthSelecionado === 'pais' ? 'Senha do Balcão incorreta. Digite 112329.' : 'Senha de ADM incorreta. Digite 391586.';
       err.style.display = 'block';
     }
     if (inputPin) {
@@ -1422,3 +1674,16 @@ window.executarLogin = executarLogin;
 window.abrirModalPerfil = abrirModalPerfil;
 window.fecharModalPerfil = fecharModalPerfil;
 window.fazerLogout = fazerLogout;
+
+
+window.abrirModalOutroServico = abrirModalOutroServico;
+window.fecharModalOutroServico = fecharModalOutroServico;
+window.preencherServicoRapido = preencherServicoRapido;
+window.definirPrecoCustom = definirPrecoCustom;
+window.confirmarServicoCustomizado = confirmarServicoCustomizado;
+window.processarFotoSlot = processarFotoSlot;
+window.apagarFotoSlot = apagarFotoSlot;
+window.abrirModalFotoDepois = abrirModalFotoDepois;
+window.fecharModalFotoDepois = fecharModalFotoDepois;
+window.processarFotoDepoisModal = processarFotoDepoisModal;
+window.salvarFotoDepoisModal = salvarFotoDepoisModal;
