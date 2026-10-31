@@ -238,10 +238,8 @@
               <div class="foto-slot-box">
                 <div class="slot-badge antes">📷 ANTES (Entrada)</div>
                 <div class="slot-buttons-row">
-                  <label class="btn-slot-action camera">
-                    <i class="fa-solid fa-camera"></i> Câmera
-                    <input type="file" id="campoFotoAntesCam" accept="image/*" capture="environment" style="display: none;" onchange="processarFotoSlot(event, 'antes')">
-                  </label>
+                  <button type="button" class="btn-slot-action camera" onclick="tirarFotoInteligente('antes', 'campoFotoAntesCam')"><i class="fa-solid fa-camera"></i> Câmera</button>
+                  <input type="file" id="campoFotoAntesCam" accept="image/*" capture="environment" style="display: none;" onchange="processarFotoSlot(event, 'antes')">
                   <label class="btn-slot-action galeria">
                     <i class="fa-solid fa-images"></i> Galeria
                     <input type="file" id="campoFotoAntesGal" accept="image/*" style="display: none;" onchange="processarFotoSlot(event, 'antes')">
@@ -257,10 +255,8 @@
               <div class="foto-slot-box">
                 <div class="slot-badge depois">✨ DEPOIS (Pronto)</div>
                 <div class="slot-buttons-row">
-                  <label class="btn-slot-action camera">
-                    <i class="fa-solid fa-camera"></i> Câmera
-                    <input type="file" id="campoFotoDepoisCam" accept="image/*" capture="environment" style="display: none;" onchange="processarFotoSlot(event, 'depois')">
-                  </label>
+                  <button type="button" class="btn-slot-action camera" onclick="tirarFotoInteligente('depois', 'campoFotoDepoisCam')"><i class="fa-solid fa-camera"></i> Câmera</button>
+                  <input type="file" id="campoFotoDepoisCam" accept="image/*" capture="environment" style="display: none;" onchange="processarFotoSlot(event, 'depois')">
                   <label class="btn-slot-action galeria">
                     <i class="fa-solid fa-images"></i> Galeria
                     <input type="file" id="campoFotoDepoisGal" accept="image/*" style="display: none;" onchange="processarFotoSlot(event, 'depois')">
@@ -279,7 +275,7 @@
         <div class="step-card highlight">
           <div class="step-header">
             <span class="step-num">3</span>
-            <span class="step-title">Fica pronto quando e quanto custa?</span>
+            <span class="step-title">Fica pronto e quanto falta?</span>
           </div>
 
           <!-- Botões rápidos de quando fica pronto -->
@@ -623,10 +619,8 @@
         <input type="hidden" id="editFotoDepoisOSId" value="">
 
         <div class="slot-buttons-row" style="margin-bottom: 14px;">
-          <label class="btn-slot-action camera">
-            <i class="fa-solid fa-camera"></i> Tirar Foto com a Câmera
-            <input type="file" id="inputFotoDepoisModalCam" accept="image/*" capture="environment" style="display: none;" onchange="processarFotoDepoisModal(event)">
-          </label>
+          <button type="button" class="btn-slot-action camera" onclick="tirarFotoInteligente('depois_modal', 'inputFotoDepoisModalCam')"><i class="fa-solid fa-camera"></i> Tirar Foto com a Câmera</button>
+          <input type="file" id="inputFotoDepoisModalCam" accept="image/*" capture="environment" style="display: none;" onchange="processarFotoDepoisModal(event)">
           <label class="btn-slot-action galeria">
             <i class="fa-solid fa-images"></i> Escolher da Galeria
             <input type="file" id="inputFotoDepoisModalGal" accept="image/*" style="display: none;" onchange="processarFotoDepoisModal(event)">
@@ -641,6 +635,39 @@
           <i class="fa-solid fa-floppy-disk"></i>
           <span>SALVAR FOTO DO TRABALHO PRONTO</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  
+  <!-- ============================================== -->
+  <!-- MODAL: CAMERA WEBCAM AO VIVO (PC E NOTEBOOK)   -->
+  <!-- ============================================== -->
+  <div class="modal-backdrop" id="modalWebcamAoVivo" onclick="fecharWebcamModal(event)">
+    <div class="modal-card modal-webcam-card" onclick="event.stopPropagation()" style="max-width: 460px; text-align: center;">
+      <div class="modal-header-simple">
+        <div class="modal-header-title">
+          <span class="modal-emoji">📸</span>
+          <h2>Câmera ao Vivo (PC)</h2>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="fecharWebcamModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div style="padding: 14px;">
+        <p style="font-size: 13px; color: #6b5c58; margin-bottom: 10px;">Posicione o calçado em frente à câmera e clique no botão abaixo:</p>
+        <div style="position: relative; width: 100%; background: #1a1412; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.25);">
+          <video id="videoWebcamStream" autoplay playsinline style="width: 100%; height: 280px; object-fit: cover; display: block;"></video>
+          <div id="webcamLoadingNotice" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; background: rgba(0,0,0,0.7);">
+            Iniciando câmera...
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; display: flex; gap: 10px;">
+          <button type="button" class="btn-confirm-custom-service" style="flex: 1;" onclick="capturarFotoWebcam()">
+            <i class="fa-solid fa-camera"></i>
+            <span>TIRAR FOTO AGORA</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
