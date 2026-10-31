@@ -623,12 +623,7 @@ function abrirNovoConserto() {
   apagarFotoSlot('depois');
   definirDataPadrao(2);
 
-  // Adiciona um servico inicial sugerido
-  app.servicosEscolhidos.push({
-    nome: 'Sapato',
-    servico: 'Meia Sola',
-    valor: 80.00
-  });
+
 
   renderizarServicosEscolhidos();
   const modal = document.getElementById('modalNovoConserto');
