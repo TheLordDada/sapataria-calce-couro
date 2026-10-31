@@ -17,6 +17,7 @@ const app = {
 // INICIALIZAÇÃO
 // ==================================================
 document.addEventListener('DOMContentLoaded', async () => {
+  verificarAutenticacaoInicial();
   await openDB();
   configurarEventosGerais();
   configurarMascaraWhatsApp();
@@ -1247,3 +1248,177 @@ function mostrarNotificacaoToast(msg, icone = 'fa-cloud-arrow-down', cor = '#10b
 
 window.mostrarNotificacaoToast = mostrarNotificacaoToast;
 window.tocarSomSucesso = tocarSomSucesso;
+
+
+// ==================================================
+// SISTEMA DE PROTECAO & CONTAS (OFICINA DOS PAIS & ADMINISTRADOR)
+// ==================================================
+let perfilAuthSelecionado = 'pais';
+
+function verificarAutenticacaoInicial() {
+  const authSalvo = localStorage.getItem('calce_auth_user') || sessionStorage.getItem('calce_auth_user');
+  if (authSalvo) {
+    try {
+      const u = JSON.parse(authSalvo);
+      aplicarContaConectada(u);
+      const overlay = document.getElementById('authOverlay');
+      if (overlay) overlay.style.display = 'none';
+      return true;
+    } catch(e) {}
+  }
+  const overlay = document.getElementById('authOverlay');
+  if (overlay) overlay.style.display = 'flex';
+  selecionarPerfilAuth('pais');
+  setTimeout(() => {
+    const input = document.getElementById('inputAuthPin');
+    if (input) input.focus();
+  }, 200);
+  return false;
+}
+
+function selecionarPerfilAuth(perfil) {
+  perfilAuthSelecionado = perfil;
+  const btnPais = document.getElementById('btnPerfilPais');
+  const btnAdmin = document.getElementById('btnPerfilAdmin');
+  const labelPin = document.getElementById('labelAuthPin');
+  const hint = document.getElementById('authHintText');
+  const err = document.getElementById('authErrorMsg');
+  const inputPin = document.getElementById('inputAuthPin');
+
+  if (err) err.style.display = 'none';
+  if (inputPin) {
+    inputPin.value = '';
+    inputPin.focus();
+  }
+
+  if (perfil === 'pais') {
+    if (btnPais) btnPais.classList.add('active');
+    if (btnAdmin) btnAdmin.classList.remove('active');
+    if (labelPin) labelPin.textContent = 'Digite o PIN da Oficina (4 digitos):';
+    if (hint) hint.innerHTML = '💡 PIN padrao da Oficina: <strong>6049</strong> (ou 1234)';
+    if (inputPin) inputPin.setAttribute('inputmode', 'numeric');
+  } else {
+    if (btnAdmin) btnAdmin.classList.add('active');
+    if (btnPais) btnPais.classList.remove('active');
+    if (labelPin) labelPin.textContent = 'Senha / PIN do Administrador:';
+    if (hint) hint.innerHTML = '👑 Senha padrao do Administrador: <strong>admin</strong> (ou 9975)';
+    if (inputPin) inputPin.setAttribute('inputmode', 'text');
+  }
+}
+
+function toggleVisibilidadePin() {
+  const input = document.getElementById('inputAuthPin');
+  const icon = document.getElementById('eyeIconPin');
+  if (!input || !icon) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'fa-solid fa-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'fa-solid fa-eye';
+  }
+}
+
+function executarLogin() {
+  const inputPin = document.getElementById('inputAuthPin');
+  const err = document.getElementById('authErrorMsg');
+  const lembrar = document.getElementById('chkLembrarAcesso') ? document.getElementById('chkLembrarAcesso').checked : true;
+  const pinDigitado = (inputPin ? inputPin.value : '').trim().toLowerCase();
+
+  let autorizado = false;
+  let nomeExibicao = '';
+
+  if (perfilAuthSelecionado === 'pais') {
+    const pinCustom = localStorage.getItem('calce_pin_pais');
+    if (pinDigitado === '6049' || pinDigitado === '1234' || (pinCustom && pinDigitado === pinCustom)) {
+      autorizado = true;
+      nomeExibicao = 'Oficina (Pais)';
+    }
+  } else {
+    const pinCustom = localStorage.getItem('calce_pin_admin');
+    if (pinDigitado === 'admin' || pinDigitado === '9975' || pinDigitado === 'admin2026' || (pinCustom && pinDigitado === pinCustom)) {
+      autorizado = true;
+      nomeExibicao = 'Administrador';
+    }
+  }
+
+  if (!autorizado) {
+    if (err) {
+      err.textContent = perfilAuthSelecionado === 'pais' ? 'PIN incorreto. Tente 6049.' : 'Senha incorreta. Tente admin.';
+      err.style.display = 'block';
+    }
+    if (inputPin) {
+      inputPin.select();
+      inputPin.focus();
+    }
+    return;
+  }
+
+  const dadosUsuario = {
+    perfil: perfilAuthSelecionado,
+    nome: nomeExibicao,
+    login_em: new Date().toISOString()
+  };
+
+  if (lembrar) {
+    localStorage.setItem('calce_auth_user', JSON.stringify(dadosUsuario));
+  } else {
+    sessionStorage.setItem('calce_auth_user', JSON.stringify(dadosUsuario));
+  }
+
+  aplicarContaConectada(dadosUsuario);
+  const overlay = document.getElementById('authOverlay');
+  if (overlay) overlay.style.display = 'none';
+
+  if (window.tocarSomSucesso) tocarSomSucesso();
+  if (window.mostrarNotificacaoToast) {
+    mostrarNotificacaoToast('Bem-vindo, ' + nomeExibicao + '!', 'fa-circle-check', '#10b981');
+  }
+}
+
+function aplicarContaConectada(u) {
+  localStorage.setItem('calce_operador_nome', u.nome || (u.perfil === 'admin' ? 'Administrador' : 'Oficina (Pais)'));
+
+  const iconH = document.getElementById('headerPerfilIcon');
+  const labelH = document.getElementById('labelNomeOperador');
+  const badgeM = document.getElementById('perfilRoleBadge');
+  const descM = document.getElementById('perfilDescricao');
+
+  if (u.perfil === 'admin') {
+    if (iconH) iconH.textContent = '👑';
+    if (labelH) labelH.textContent = 'Admin';
+    if (badgeM) badgeM.textContent = '👑 Administrador';
+    if (descM) descM.textContent = 'Acesso administrativo completo: supervisao, ajuda e atualizacoes.';
+  } else {
+    if (iconH) iconH.textContent = '🛠️';
+    if (labelH) labelH.textContent = 'Oficina';
+    if (badgeM) badgeM.textContent = '🛠️ Oficina & Balcão';
+    if (descM) descM.textContent = 'Acesso operacional da oficina dos pais para registrar consertos e entregas.';
+  }
+}
+
+function abrirModalPerfil() {
+  const modal = document.getElementById('modalPerfilUsuario');
+  if (modal) modal.classList.add('open');
+}
+
+function fecharModalPerfil(e) {
+  const modal = document.getElementById('modalPerfilUsuario');
+  if (modal) modal.classList.remove('open');
+}
+
+function fazerLogout() {
+  if (confirm('Deseja realmente sair e trocar de conta neste aparelho?')) {
+    localStorage.removeItem('calce_auth_user');
+    sessionStorage.removeItem('calce_auth_user');
+    fecharModalPerfil();
+    verificarAutenticacaoInicial();
+  }
+}
+
+window.selecionarPerfilAuth = selecionarPerfilAuth;
+window.toggleVisibilidadePin = toggleVisibilidadePin;
+window.executarLogin = executarLogin;
+window.abrirModalPerfil = abrirModalPerfil;
+window.fecharModalPerfil = fecharModalPerfil;
+window.fazerLogout = fazerLogout;
