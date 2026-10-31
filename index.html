@@ -202,9 +202,15 @@
           </div>
 
           <!-- Botão para escrever serviço personalizado -->
-          <button type="button" class="btn-outro-servico" id="btnAdicionarOutroServico">
-            <i class="fa-solid fa-pencil"></i> + Escrever outro serviço diferente
-          </button>
+          <!-- Botao Grande e Interativo para Servico Personalizado -->
+          <div class="custom-service-banner" id="btnAdicionarOutroServico" onclick="abrirModalOutroServico()">
+            <div class="cs-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+            <div class="cs-info">
+              <strong>+ Escrever Outro Serviço / Valor Personalizado</strong>
+              <span>Toque aqui se for um conserto que não está nos botões acima</span>
+            </div>
+            <i class="fa-solid fa-chevron-right cs-arrow"></i>
+          </div>
 
           <!-- Lista do que já foi adicionado -->
           <div class="servicos-selecionados-box">
@@ -220,16 +226,51 @@
             <input type="text" id="campoObservacao" placeholder="Ex: Bico já ralado, salto gasto do lado direito..." autocomplete="off">
           </div>
 
-          <!-- Foto rápida antes do conserto -->
-          <div class="foto-box-simple">
-            <label class="btn-foto-upload">
+          <!-- FOTOS ANTES E DEPOIS DO CONSERTO -->
+          <div class="fotos-secao-card">
+            <div class="secao-fotos-header">
               <i class="fa-solid fa-camera"></i>
-              <span>Tirar ou Escolher Foto do Calçado</span>
-              <input type="file" id="campoFotoInput" accept="image/*" capture="environment" style="display: none;">
-            </label>
-            <div id="fotoPreviewBox" style="display: none;" class="foto-preview-box">
-              <img id="imgFotoPreview" src="" alt="Prévia">
-              <button type="button" class="btn-apagar-foto" id="btnApagarFoto"><i class="fa-solid fa-trash"></i> Apagar Foto</button>
+              <strong>Fotos do Conserto (Antes e Depois)</strong>
+            </div>
+
+            <div class="fotos-grid-duas">
+              <!-- SLOT 1: ANTES (COMO CHEGOU) -->
+              <div class="foto-slot-box">
+                <div class="slot-badge antes">📷 ANTES (Entrada)</div>
+                <div class="slot-buttons-row">
+                  <label class="btn-slot-action camera">
+                    <i class="fa-solid fa-camera"></i> Câmera
+                    <input type="file" id="campoFotoAntesCam" accept="image/*" capture="environment" style="display: none;" onchange="processarFotoSlot(event, 'antes')">
+                  </label>
+                  <label class="btn-slot-action galeria">
+                    <i class="fa-solid fa-images"></i> Galeria
+                    <input type="file" id="campoFotoAntesGal" accept="image/*" style="display: none;" onchange="processarFotoSlot(event, 'antes')">
+                  </label>
+                </div>
+                <div id="previewSlotAntes" style="display: none;" class="foto-slot-preview">
+                  <img id="imgSlotAntes" src="" alt="Foto Antes">
+                  <button type="button" class="btn-apagar-slot" onclick="apagarFotoSlot('antes')"><i class="fa-solid fa-trash"></i> Apagar</button>
+                </div>
+              </div>
+
+              <!-- SLOT 2: DEPOIS (QUANDO PRONTO) -->
+              <div class="foto-slot-box">
+                <div class="slot-badge depois">✨ DEPOIS (Pronto)</div>
+                <div class="slot-buttons-row">
+                  <label class="btn-slot-action camera">
+                    <i class="fa-solid fa-camera"></i> Câmera
+                    <input type="file" id="campoFotoDepoisCam" accept="image/*" capture="environment" style="display: none;" onchange="processarFotoSlot(event, 'depois')">
+                  </label>
+                  <label class="btn-slot-action galeria">
+                    <i class="fa-solid fa-images"></i> Galeria
+                    <input type="file" id="campoFotoDepoisGal" accept="image/*" style="display: none;" onchange="processarFotoSlot(event, 'depois')">
+                  </label>
+                </div>
+                <div id="previewSlotDepois" style="display: none;" class="foto-slot-preview">
+                  <img id="imgSlotDepois" src="" alt="Foto Depois">
+                  <button type="button" class="btn-apagar-slot" onclick="apagarFotoSlot('depois')"><i class="fa-solid fa-trash"></i> Apagar</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -506,10 +547,104 @@
       </button>
 
       <div class="auth-footer-help">
-        <span id="authHintText">💡 PIN padrao da Oficina: <strong>6049</strong></span>
+        <span id="authHintText">💡 Senha do Balcão: <strong>112329</strong></span>
       </div>
     </div>
   </div>
+  
+  <!-- ============================================== -->
+  <!-- MODAL: OUTRO SERVICO PERSONALIZADO INTERATIVO  -->
+  <!-- ============================================== -->
+  <div class="modal-backdrop" id="modalOutroServico" onclick="fecharModalOutroServico(event)">
+    <div class="modal-card modal-outro-servico-card" onclick="event.stopPropagation()">
+      <div class="modal-header-simple">
+        <div class="modal-header-title">
+          <span class="modal-emoji">✏️</span>
+          <h2>Outro Serviço</h2>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="fecharModalOutroServico()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="custom-srv-body">
+        <label class="custom-srv-label">Sugestões rápidas (toque para escolher):</label>
+        <div class="quick-srv-tags">
+          <button type="button" class="tag-srv" onclick="preencherServicoRapido('Pintura / Tingimento', 60)">🎨 Pintura</button>
+          <button type="button" class="tag-srv" onclick="preencherServicoRapido('Troca de Palmilha', 30)">👞 Palmilha</button>
+          <button type="button" class="tag-srv" onclick="preencherServicoRapido('Troca de Fivela / Elástico', 25)">🪡 Fivela/Elástico</button>
+          <button type="button" class="tag-srv" onclick="preencherServicoRapido('Troca de Cursor / Zíper', 20)">🤐 Cursor Zíper</button>
+          <button type="button" class="tag-srv" onclick="preencherServicoRapido('Ajuste de Alça de Bolsa', 35)">👜 Alça de Bolsa</button>
+          <button type="button" class="tag-srv" onclick="preencherServicoRapido('Reforço no Calcanhar', 40)">🛡️ Reforço</button>
+        </div>
+
+        <div class="custom-input-box" style="margin-top: 14px;">
+          <label>Nome do Serviço a Fazer:</label>
+          <input type="text" id="inputCustomServicoNome" placeholder="Ex: Colagem reforçada, tingimento..." autocomplete="off">
+        </div>
+
+        <div class="custom-input-box" style="margin-top: 12px;">
+          <label>Valor deste Serviço:</label>
+          <div class="quick-price-row">
+            <button type="button" class="btn-quick-val" onclick="definirPrecoCustom(20)">R$ 20</button>
+            <button type="button" class="btn-quick-val" onclick="definirPrecoCustom(30)">R$ 30</button>
+            <button type="button" class="btn-quick-val" onclick="definirPrecoCustom(40)">R$ 40</button>
+            <button type="button" class="btn-quick-val" onclick="definirPrecoCustom(50)">R$ 50</button>
+            <button type="button" class="btn-quick-val" onclick="definirPrecoCustom(80)">R$ 80</button>
+            <button type="button" class="btn-quick-val" onclick="definirPrecoCustom(100)">R$ 100</button>
+          </div>
+          <div class="custom-price-field">
+            <span class="prefix">R$</span>
+            <input type="number" id="inputCustomServicoPreco" step="0.50" min="0" placeholder="0,00" inputmode="decimal">
+          </div>
+        </div>
+
+        <button type="button" class="btn-confirm-custom-service" onclick="confirmarServicoCustomizado()">
+          <i class="fa-solid fa-check"></i>
+          <span>ADICIONAR ESTE SERVIÇO AO PEDIDO</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: ADICIONAR FOTO DEPOIS (CALCADO PRONTO)   -->
+  <!-- ============================================== -->
+  <div class="modal-backdrop" id="modalFotoDepois" onclick="fecharModalFotoDepois(event)">
+    <div class="modal-card modal-foto-depois-card" onclick="event.stopPropagation()">
+      <div class="modal-header-simple">
+        <div class="modal-header-title">
+          <span class="modal-emoji">✨</span>
+          <h2>Foto do Conserto Pronto</h2>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="fecharModalFotoDepois()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="foto-depois-body">
+        <p style="font-size: 13px; color: #6b5c58; margin-bottom: 12px;">Tire ou escolha a foto de como o calçado ficou pronto (DEPOIS):</p>
+        <input type="hidden" id="editFotoDepoisOSId" value="">
+
+        <div class="slot-buttons-row" style="margin-bottom: 14px;">
+          <label class="btn-slot-action camera">
+            <i class="fa-solid fa-camera"></i> Tirar Foto com a Câmera
+            <input type="file" id="inputFotoDepoisModalCam" accept="image/*" capture="environment" style="display: none;" onchange="processarFotoDepoisModal(event)">
+          </label>
+          <label class="btn-slot-action galeria">
+            <i class="fa-solid fa-images"></i> Escolher da Galeria
+            <input type="file" id="inputFotoDepoisModalGal" accept="image/*" style="display: none;" onchange="processarFotoDepoisModal(event)">
+          </label>
+        </div>
+
+        <div id="previewFotoDepoisModalBox" style="display: none; text-align: center; margin-bottom: 14px;">
+          <img id="imgFotoDepoisModal" src="" style="max-height: 220px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);" alt="Pronto">
+        </div>
+
+        <button type="button" class="btn-salvar-foto-depois" onclick="salvarFotoDepoisModal()">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>SALVAR FOTO DO TRABALHO PRONTO</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- SCRIPTS -->
   <script src="db.js"></script>
   <script src="app.js"></script>
