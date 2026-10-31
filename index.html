@@ -42,6 +42,10 @@
       </div>
 
       <div class="header-buttons">
+        <button class="btn-header-user" id="btnPerfilUsuario" onclick="abrirModalPerfil()" title="Perfil Conectado">
+          <span id="headerPerfilIcon">🛠️</span>
+          <span id="labelNomeOperador">Oficina</span>
+        </button>
         <button class="btn-header-caixa" id="btnAbrirCaixaModal" title="Ver dinheiro e caixa">
           <i class="fa-solid fa-wallet"></i>
           <span>Meu Caixa</span>
@@ -420,6 +424,92 @@
     </div>
   </div>
 
+  
+  <!-- MODAL: PERFIL DO USUARIO / SAIR -->
+  <div class="modal-backdrop" id="modalPerfilUsuario" onclick="fecharModalPerfil(event)">
+    <div class="modal-card modal-perfil-card" onclick="event.stopPropagation()">
+      <div class="modal-header-simple">
+        <div class="modal-header-title">
+          <span class="modal-emoji" id="modalPerfilEmoji">👤</span>
+          <h2 id="modalPerfilTitulo">Conta Conectada</h2>
+        </div>
+        <button class="btn-close-modal" onclick="fecharModalPerfil()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="perfil-body">
+        <div class="perfil-card-info">
+          <div class="perfil-card-badge" id="perfilRoleBadge">🛠️ Oficina & Balcão</div>
+          <p id="perfilDescricao" style="margin-top: 8px; font-size: 13px; color: #6b5c58;">Acesso da oficina dos pais para registrar consertos e entregas.</p>
+        </div>
+        <div class="perfil-actions" style="margin-top: 20px;">
+          <button type="button" class="btn-logout" onclick="fazerLogout()">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span>Trocar de Conta / Desconectar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA DE PROTECAO / LOGIN COM 2 CONTAS -->
+  <div class="auth-overlay" id="authOverlay" style="display: none;">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="auth-emoji">👞</span>
+        <h2>Sapataria Calce Couro</h2>
+        <p>Acesso Seguro ao Sistema</p>
+      </div>
+
+      <div class="auth-profiles-title">Quem esta acessando agora?</div>
+
+      <div class="auth-profiles-grid">
+        <button type="button" class="btn-profile-card active" id="btnPerfilPais" onclick="selecionarPerfilAuth('pais')">
+          <div class="p-icon">🛠️</div>
+          <div class="p-info">
+            <strong>Oficina & Balcão</strong>
+            <span>Celular dos Pais / Loja</span>
+          </div>
+          <i class="fa-solid fa-circle-check p-check"></i>
+        </button>
+
+        <button type="button" class="btn-profile-card" id="btnPerfilAdmin" onclick="selecionarPerfilAuth('admin')">
+          <div class="p-icon">👑</div>
+          <div class="p-info">
+            <strong>Administrador</strong>
+            <span>Supervisao, Ajuda & Atualizacoes</span>
+          </div>
+          <i class="fa-solid fa-circle-check p-check"></i>
+        </button>
+      </div>
+
+      <div class="auth-pin-group">
+        <label id="labelAuthPin">Digite o PIN da Oficina (4 digitos):</label>
+        <div class="pin-input-wrapper">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" id="inputAuthPin" placeholder="Digite o PIN..." maxlength="20" autocomplete="current-password" inputmode="numeric" onkeydown="if(event.key==='Enter') executarLogin()">
+          <button type="button" class="btn-toggle-pin" onclick="toggleVisibilidadePin()" title="Ver PIN">
+            <i class="fa-solid fa-eye" id="eyeIconPin"></i>
+          </button>
+        </div>
+        <div class="auth-error-msg" id="authErrorMsg" style="display: none;"></div>
+      </div>
+
+      <div class="auth-remember-row">
+        <label class="checkbox-remember">
+          <input type="checkbox" id="chkLembrarAcesso" checked>
+          <span>Lembrar meu acesso neste aparelho</span>
+        </label>
+      </div>
+
+      <button type="button" class="btn-entrar-app" onclick="executarLogin()">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        <span>ENTRAR NO SISTEMA</span>
+      </button>
+
+      <div class="auth-footer-help">
+        <span id="authHintText">💡 PIN padrao da Oficina: <strong>6049</strong></span>
+      </div>
+    </div>
+  </div>
   <!-- SCRIPTS -->
   <script src="db.js"></script>
   <script src="app.js"></script>
