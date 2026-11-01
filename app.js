@@ -500,58 +500,185 @@ async function salvarFotoDepoisModal() {
 
 
 // ==================================================
-// SUPORTE INTELIGENTE DE CÂMERA (PC WEBCAM & CELULAR ANDROID)
+// CAIXINHA DA CÂMERA DO APLICATIVO (IN-APP VIEW-FINDER)
 // ==================================================
 let webcamStreamGlobal = null;
 let webcamSlotAlvo = null;
-
-function ehDispositivoMovel() {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
+let webcamInputIdFallback = null;
+let cameraFacingMode = 'environment'; // Padrão: traseira (ideal para calçados)
+let fotoTemporariaCapturada = null;
 
 async function tirarFotoInteligente(slot, inputId) {
-  // Se for celular (Android APK ou navegador mobile), aciona diretamente o input nativo da camera
-  if (ehDispositivoMovel()) {
-    const input = document.getElementById(inputId);
-    if (input) input.click();
+  webcamSlotAlvo = slot;
+  webcamInputIdFallback = inputId;
+  fotoTemporariaCapturada = null;
+
+  const modal = document.getElementById('modalWebcamAoVivo');
+  if (modal) modal.classList.add('open');
+
+  retomarCameraAoVivo(false);
+  await iniciarStreamCamera();
+}
+
+async function iniciarStreamCamera() {
+  const video = document.getElementById('videoWebcamStream');
+  const loading = document.getElementById('webcamLoadingNotice');
+  const errorBox = document.getElementById('webcamErrorNotice');
+
+  if (loading) loading.style.display = 'flex';
+  if (errorBox) errorBox.style.display = 'none';
+
+  if (webcamStreamGlobal) {
+    webcamStreamGlobal.getTracks().forEach(t => t.stop());
+    webcamStreamGlobal = null;
+  }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (loading) loading.style.display = 'none';
+    if (errorBox) errorBox.style.display = 'flex';
     return;
   }
 
-  // Se estiver no Computador (PC / Notebook), tenta abrir a webcam ao vivo
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  try {
+    const constraints = {
+      video: {
+        facingMode: { ideal: cameraFacingMode },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: false
+    };
+
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    webcamStreamGlobal = stream;
+
+    if (video) {
+      video.srcObject = stream;
+      video.onloadedmetadata = () => {
+        if (loading) loading.style.display = 'none';
+        video.play();
+      };
+    }
+  } catch (err) {
+    console.warn('Erro ao abrir câmera traseira, tentando padrão:', err);
     try {
-      webcamSlotAlvo = slot;
-      const modal = document.getElementById('modalWebcamAoVivo');
-      const notice = document.getElementById('webcamLoadingNotice');
-      if (notice) notice.style.display = 'flex';
-      if (modal) modal.classList.add('open');
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false
-      });
-
-      webcamStreamGlobal = stream;
-      const video = document.getElementById('videoWebcamStream');
+      const streamFallback = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      webcamStreamGlobal = streamFallback;
       if (video) {
-        video.srcObject = stream;
+        video.srcObject = streamFallback;
         video.onloadedmetadata = () => {
-          if (notice) notice.style.display = 'none';
+          if (loading) loading.style.display = 'none';
           video.play();
         };
       }
-      return;
-    } catch (err) {
-      console.warn('Webcam nao acessivel no PC, abrindo seletor de arquivos:', err);
-      fecharWebcamModal();
-      const input = document.getElementById(inputId);
-      if (input) input.click();
-      return;
+    } catch (fallbackErr) {
+      console.error('Falha completa na câmera:', fallbackErr);
+      if (loading) loading.style.display = 'none';
+      if (errorBox) errorBox.style.display = 'flex';
     }
   }
+}
 
-  // Fallback se nao houver suporte a getUserMedia
-  const input = document.getElementById(inputId);
+async function alternarCamera() {
+  cameraFacingMode = (cameraFacingMode === 'environment') ? 'user' : 'environment';
+  await iniciarStreamCamera();
+}
+
+function retomarCameraAoVivo(reiniciarStream = true) {
+  fotoTemporariaCapturada = null;
+
+  const video = document.getElementById('videoWebcamStream');
+  const imgCongelada = document.getElementById('imgWebcamCongelada');
+  const frameFocus = document.getElementById('cameraFocusFrame');
+  const controlsLive = document.getElementById('cameraControlsLive');
+  const controlsReview = document.getElementById('cameraControlsReview');
+  const guideText = document.getElementById('cameraGuideText');
+  const btnFlip = document.getElementById('btnFlipCamera');
+
+  if (video) video.style.display = 'block';
+  if (imgCongelada) { imgCongelada.style.display = 'none'; imgCongelada.src = ''; }
+  if (frameFocus) frameFocus.style.display = 'block';
+  if (btnFlip) btnFlip.style.display = 'flex';
+  if (controlsLive) controlsLive.style.display = 'flex';
+  if (controlsReview) controlsReview.style.display = 'none';
+  if (guideText) guideText.textContent = 'Aponte para o calçado e aperte o botão abaixo:';
+
+  if (reiniciarStream && !webcamStreamGlobal) {
+    iniciarStreamCamera();
+  }
+}
+
+function capturarFotoWebcam() {
+  const video = document.getElementById('videoWebcamStream');
+  const imgCongelada = document.getElementById('imgWebcamCongelada');
+  const frameFocus = document.getElementById('cameraFocusFrame');
+  const controlsLive = document.getElementById('cameraControlsLive');
+  const controlsReview = document.getElementById('cameraControlsReview');
+  const guideText = document.getElementById('cameraGuideText');
+  const btnFlip = document.getElementById('btnFlipCamera');
+
+  if (!video || !video.videoWidth) {
+    alert('Aguarde a câmera iniciar...');
+    return;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  fotoTemporariaCapturada = canvas.toDataURL('image/jpeg', 0.85);
+
+  if (imgCongelada) {
+    imgCongelada.src = fotoTemporariaCapturada;
+    imgCongelada.style.display = 'block';
+  }
+  if (video) video.style.display = 'none';
+  if (frameFocus) frameFocus.style.display = 'none';
+  if (btnFlip) btnFlip.style.display = 'none';
+  if (controlsLive) controlsLive.style.display = 'none';
+  if (controlsReview) controlsReview.style.display = 'flex';
+  if (guideText) guideText.textContent = 'Gostou da foto? Escolha uma das opções abaixo:';
+
+  tocarSomSucesso();
+}
+
+function confirmarFotoCapturada() {
+  if (!fotoTemporariaCapturada) return;
+
+  if (webcamSlotAlvo === 'antes') {
+    app.fotoAntesBase64 = fotoTemporariaCapturada;
+    app.fotoBase64 = fotoTemporariaCapturada;
+    const img = document.getElementById('imgSlotAntes');
+    const box = document.getElementById('previewSlotAntes');
+    if (img) img.src = fotoTemporariaCapturada;
+    if (box) box.style.display = 'block';
+  } else if (webcamSlotAlvo === 'depois') {
+    app.fotoDepoisBase64 = fotoTemporariaCapturada;
+    const img = document.getElementById('imgSlotDepois');
+    const box = document.getElementById('previewSlotDepois');
+    if (img) img.src = fotoTemporariaCapturada;
+    if (box) box.style.display = 'block';
+  } else if (webcamSlotAlvo === 'depois_modal') {
+    app.fotoDepoisModalBase64 = fotoTemporariaCapturada;
+    const img = document.getElementById('imgFotoDepoisModal');
+    const box = document.getElementById('previewFotoDepoisModalBox');
+    if (img) img.src = fotoTemporariaCapturada;
+    if (box) box.style.display = 'block';
+  }
+
+  fecharWebcamModal();
+  tocarSomSucesso();
+}
+
+function acionarGaleriaFallback() {
+  fecharWebcamModal();
+  let galInputId = webcamInputIdFallback;
+  if (webcamSlotAlvo === 'antes') galInputId = 'campoFotoAntesGal';
+  if (webcamSlotAlvo === 'depois') galInputId = 'campoFotoDepoisGal';
+  if (webcamSlotAlvo === 'depois_modal') galInputId = 'inputFotoDepoisModalGal';
+
+  const input = document.getElementById(galInputId) || document.getElementById(webcamInputIdFallback);
   if (input) input.click();
 }
 
@@ -565,45 +692,7 @@ function fecharWebcamModal(e) {
   if (modal) modal.classList.remove('open');
   const video = document.getElementById('videoWebcamStream');
   if (video) video.srcObject = null;
-}
-
-function capturarFotoWebcam() {
-  const video = document.getElementById('videoWebcamStream');
-  if (!video || !video.videoWidth) {
-    alert('Aguarde a câmera iniciar...');
-    return;
-  }
-
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-
-  if (webcamSlotAlvo === 'antes') {
-    app.fotoAntesBase64 = dataUrl;
-    app.fotoBase64 = dataUrl;
-    const img = document.getElementById('imgSlotAntes');
-    const box = document.getElementById('previewSlotAntes');
-    if (img) img.src = dataUrl;
-    if (box) box.style.display = 'block';
-  } else if (webcamSlotAlvo === 'depois') {
-    app.fotoDepoisBase64 = dataUrl;
-    const img = document.getElementById('imgSlotDepois');
-    const box = document.getElementById('previewSlotDepois');
-    if (img) img.src = dataUrl;
-    if (box) box.style.display = 'block';
-  } else if (webcamSlotAlvo === 'depois_modal') {
-    app.fotoDepoisModalBase64 = dataUrl;
-    const img = document.getElementById('imgFotoDepoisModal');
-    const box = document.getElementById('previewFotoDepoisModalBox');
-    if (img) img.src = dataUrl;
-    if (box) box.style.display = 'block';
-  }
-
-  fecharWebcamModal();
-  tocarSomSucesso();
+  fotoTemporariaCapturada = null;
 }
 
 
@@ -1796,3 +1885,13 @@ window.salvarFotoDepoisModal = salvarFotoDepoisModal;
 window.tirarFotoInteligente = tirarFotoInteligente;
 window.fecharWebcamModal = fecharWebcamModal;
 window.capturarFotoWebcam = capturarFotoWebcam;
+
+
+window.tirarFotoInteligente = tirarFotoInteligente;
+window.iniciarStreamCamera = iniciarStreamCamera;
+window.alternarCamera = alternarCamera;
+window.retomarCameraAoVivo = retomarCameraAoVivo;
+window.capturarFotoWebcam = capturarFotoWebcam;
+window.confirmarFotoCapturada = confirmarFotoCapturada;
+window.acionarGaleriaFallback = acionarGaleriaFallback;
+window.fecharWebcamModal = fecharWebcamModal;
