@@ -638,38 +638,79 @@
       </div>
     </div>
   </div>
-
-  
   <!-- ============================================== -->
-  <!-- MODAL: CAMERA WEBCAM AO VIVO (PC E NOTEBOOK)   -->
+  <!-- MODAL: CAIXINHA DA CÂMERA DO PRÓPRIO APP       -->
   <!-- ============================================== -->
   <div class="modal-backdrop" id="modalWebcamAoVivo" onclick="fecharWebcamModal(event)">
-    <div class="modal-card modal-webcam-card" onclick="event.stopPropagation()" style="max-width: 460px; text-align: center;">
+    <div class="modal-card modal-camera-box-card" onclick="event.stopPropagation()">
       <div class="modal-header-simple">
         <div class="modal-header-title">
           <span class="modal-emoji">📸</span>
-          <h2>Câmera ao Vivo (PC)</h2>
+          <h2>Câmera do Aplicativo</h2>
         </div>
         <button type="button" class="btn-close-modal" onclick="fecharWebcamModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <div style="padding: 14px;">
-        <p style="font-size: 13px; color: #6b5c58; margin-bottom: 10px;">Posicione o calçado em frente à câmera e clique no botão abaixo:</p>
-        <div style="position: relative; width: 100%; background: #1a1412; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.25);">
-          <video id="videoWebcamStream" autoplay playsinline style="width: 100%; height: 280px; object-fit: cover; display: block;"></video>
-          <div id="webcamLoadingNotice" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; font-weight: 700; background: rgba(0,0,0,0.7);">
-            Iniciando câmera...
+      <div class="camera-box-content">
+        <p class="camera-guide-text" id="cameraGuideText">Aponte para o calçado e aperte o botão abaixo:</p>
+
+        <!-- Viewfinder Box (Visor da Câmera) -->
+        <div class="camera-viewport-wrapper">
+          <video id="videoWebcamStream" autoplay playsinline muted></video>
+          <img id="imgWebcamCongelada" style="display: none;" alt="Foto tirada">
+
+          <!-- Guia de Enquadramento Visual -->
+          <div class="camera-focus-frame" id="cameraFocusFrame">
+            <span class="corner tl"></span>
+            <span class="corner tr"></span>
+            <span class="corner bl"></span>
+            <span class="corner br"></span>
           </div>
+
+          <!-- Mensagem de Carregando / Erro -->
+          <div id="webcamLoadingNotice" class="camera-overlay-notice">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 8px;"></i>
+            <span>Iniciando câmera...</span>
+          </div>
+
+          <div id="webcamErrorNotice" class="camera-overlay-notice" style="display: none; background: rgba(30,20,15,0.95); flex-direction: column; gap: 10px; padding: 20px;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 32px; color: #f59e0b;"></i>
+            <span style="font-size: 13px; font-weight: 600; text-align: center;">Não foi possível acessar a câmera diretamente.</span>
+            <button type="button" class="btn-fallback-gallery" onclick="acionarGaleriaFallback()">
+              <i class="fa-solid fa-images"></i> Escolher foto da Galeria
+            </button>
+          </div>
+
+          <!-- Botão de Virar Câmera (Frontal / Traseira) -->
+          <button type="button" class="btn-flip-camera" id="btnFlipCamera" onclick="alternarCamera()" title="Virar Câmera">
+            <i class="fa-solid fa-camera-rotate"></i>
+          </button>
         </div>
 
-        <div style="margin-top: 14px; display: flex; gap: 10px;">
-          <button type="button" class="btn-confirm-custom-service" style="flex: 1;" onclick="capturarFotoWebcam()">
-            <i class="fa-solid fa-camera"></i>
-            <span>TIRAR FOTO AGORA</span>
+        <!-- Controles da Câmera (Ao Vivo) -->
+        <div id="cameraControlsLive" class="camera-controls-row">
+          <button type="button" class="btn-camera-shutter" onclick="capturarFotoWebcam()">
+            <div class="shutter-inner">
+              <i class="fa-solid fa-camera"></i>
+            </div>
+            <span>TIRAR FOTO</span>
+          </button>
+        </div>
+
+        <!-- Controles após Foto Tirada (Confirmar / Tirar Outra) -->
+        <div id="cameraControlsReview" class="camera-controls-review" style="display: none;">
+          <button type="button" class="btn-retake-photo" onclick="retomarCameraAoVivo()">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>Tirar Outra</span>
+          </button>
+          <button type="button" class="btn-confirm-photo" onclick="confirmarFotoCapturada()">
+            <i class="fa-solid fa-check"></i>
+            <span>USAR ESTA FOTO</span>
           </button>
         </div>
       </div>
     </div>
+  </div>
   </div>
 
   <!-- SCRIPTS -->
