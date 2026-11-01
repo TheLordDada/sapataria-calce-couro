@@ -2306,3 +2306,114 @@ body {
   transform: scale(0.97);
   background: #15803d;
 }
+
+
+/* ================================================== */
+/* CAIXA DE DIÁLOGO PRÓPRIA (SUBSTITUI ALERT E CONFIRM)*/
+/* ================================================== */
+.modal-dialogo-card {
+  max-width: 380px !important;
+  width: 90% !important;
+  border-radius: 22px !important;
+  padding: 26px 22px 22px 22px !important;
+  text-align: center !important;
+  background: #ffffff !important;
+  border: 1.5px solid #dfd3ca !important;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.3) !important;
+  animation: popDialogo 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popDialogo {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.dialogo-icon-box {
+  font-size: 42px;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+
+.dialogo-title {
+  font-size: 19px;
+  font-weight: 900;
+  color: #2b1d1a;
+  margin-bottom: 10px;
+}
+
+.dialogo-message {
+  font-size: 14.5px;
+  color: #584642;
+  line-height: 1.5;
+  margin-bottom: 22px;
+  white-space: pre-line;
+  word-break: break-word;
+}
+
+.dialogo-actions-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.btn-dialogo-cancel {
+  flex: 1;
+  background: #f1eae2;
+  color: #6b5c58;
+  border: 1.5px solid #d8ccc2;
+  padding: 13px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.btn-dialogo-cancel:active {
+  transform: scale(0.97);
+  background: #e4dacd;
+}
+
+.btn-dialogo-confirm {
+  flex: 1.2;
+  background: #2b1d1a;
+  color: #ffffff;
+  border: none;
+  padding: 13px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(43, 29, 26, 0.25);
+  transition: transform 0.15s, background 0.15s;
+}
+
+.btn-dialogo-confirm:active {
+  transform: scale(0.97);
+  background: #18100e;
+}
+
+/* Toast Flutuante */
+.toast-app-banner {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-120px);
+  background: #2b1d1a;
+  color: #ffffff;
+  padding: 12px 22px;
+  border-radius: 30px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  z-index: 99999;
+  pointer-events: none;
+  transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.toast-app-banner.show {
+  transform: translateX(-50%) translateY(0);
+}
