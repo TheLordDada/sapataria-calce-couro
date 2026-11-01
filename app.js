@@ -1,3 +1,111 @@
+
+// ==================================================
+// DIÁLOGOS PRÓPRIOS DO APP (ELIMINA O "A PÁGINA DIZ")
+// ==================================================
+let resolverDialogoPromise = null;
+
+function mostrarAvisoApp(mensagem, titulo = 'Calce Couro', icone = '👞') {
+  return new Promise((resolve) => {
+    resolverDialogoPromise = resolve;
+    const modal = document.getElementById('modalDialogoApp');
+    const lblIcone = document.getElementById('dialogoIconBox');
+    const lblTitulo = document.getElementById('dialogoTitulo');
+    const lblMsg = document.getElementById('dialogoMensagem');
+    const btnCancel = document.getElementById('btnDialogoCancelar');
+    const btnConfirm = document.getElementById('btnDialogoConfirmar');
+
+    if (lblIcone) lblIcone.textContent = icone;
+    if (lblTitulo) lblTitulo.textContent = titulo;
+    if (lblMsg) lblMsg.textContent = mensagem;
+    if (btnCancel) btnCancel.style.display = 'none';
+
+    if (btnConfirm) {
+      btnConfirm.textContent = 'ENTENDI';
+      btnConfirm.style.background = '#2b1d1a';
+      btnConfirm.onclick = () => {
+        if (modal) modal.classList.remove('open');
+        if (resolverDialogoPromise) {
+          resolverDialogoPromise(true);
+          resolverDialogoPromise = null;
+        }
+      };
+    }
+
+    if (modal) modal.classList.add('open');
+  });
+}
+
+function mostrarConfirmacaoApp(mensagem, opcoes = {}) {
+  const {
+    titulo = 'Calce Couro',
+    icone = '❓',
+    txtConfirmar = 'Sim',
+    txtCancelar = 'Cancelar',
+    corConfirmar = '#2b1d1a'
+  } = opcoes;
+
+  return new Promise((resolve) => {
+    resolverDialogoPromise = resolve;
+    const modal = document.getElementById('modalDialogoApp');
+    const lblIcone = document.getElementById('dialogoIconBox');
+    const lblTitulo = document.getElementById('dialogoTitulo');
+    const lblMsg = document.getElementById('dialogoMensagem');
+    const btnCancel = document.getElementById('btnDialogoCancelar');
+    const btnConfirm = document.getElementById('btnDialogoConfirmar');
+
+    if (lblIcone) lblIcone.textContent = icone;
+    if (lblTitulo) lblTitulo.textContent = titulo;
+    if (lblMsg) lblMsg.textContent = mensagem;
+
+    if (btnCancel) {
+      btnCancel.style.display = 'block';
+      btnCancel.textContent = txtCancelar;
+      btnCancel.onclick = () => {
+        if (modal) modal.classList.remove('open');
+        if (resolverDialogoPromise) {
+          resolverDialogoPromise(false);
+          resolverDialogoPromise = null;
+        }
+      };
+    }
+
+    if (btnConfirm) {
+      btnConfirm.textContent = txtConfirmar;
+      btnConfirm.style.background = corConfirmar;
+      btnConfirm.onclick = () => {
+        if (modal) modal.classList.remove('open');
+        if (resolverDialogoPromise) {
+          resolverDialogoPromise(true);
+          resolverDialogoPromise = null;
+        }
+      };
+    }
+
+    if (modal) modal.classList.add('open');
+  });
+}
+
+function mostrarToast(mensagem, icone = '✨', duracaoMs = 3200) {
+  const toast = document.getElementById('toastApp');
+  const txt = document.getElementById('toastAppMsg');
+  const ico = document.getElementById('toastAppIcon');
+  if (!toast) return;
+
+  if (txt) txt.textContent = mensagem;
+  if (ico) ico.textContent = icone;
+
+  toast.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+  }, duracaoMs);
+}
+
+// Substitui window.alert para nunca mais mostrar "A página diz"
+window.alert = function(msg) {
+  mostrarAvisoApp(msg);
+};
+
 // ==================================================
 // SAPATARIA CALCE COURO - APLICAÇÃO SUPER SIMPLES & INTERATIVA
 // Feita para uso ágil, intuitivo e sem complicação no dia a dia
@@ -494,7 +602,7 @@ async function salvarFotoDepoisModal() {
   fecharModalFotoDepois();
   tocarSomSucesso();
   await carregarOrdens();
-  alert('✨ Foto de conserto pronto (DEPOIS) salva com sucesso!');
+  mostrarToast('Foto do conserto pronto salva com sucesso!', '✨');
 }
 
 
@@ -770,7 +878,16 @@ async function salvarConserto(e) {
   await carregarOrdens();
 
   // Pergunta diretamente se deseja enviar o comprovante no WhatsApp agora
-  const enviarZap = confirm(`🎉 Conserto #${salva.numero_os} salvo com sucesso!\n\nDeseja enviar o comprovante no WhatsApp de ${salva.cliente_nome} agora?`);
+  const enviarZap = await mostrarConfirmacaoApp(
+    `Conserto #${salva.numero_os} foi salvo com sucesso!\n\nDeseja enviar o comprovante no WhatsApp de ${salva.cliente_nome} agora?`,
+    {
+      titulo: '🎉 Pedido Cadastrado!',
+      icone: '📱',
+      txtConfirmar: 'Sim, Enviar Zap',
+      txtCancelar: 'Agora Não',
+      corConfirmar: '#16a34a'
+    }
+  );
   if (enviarZap) {
     enviarZapDireto(salva.id);
   }
@@ -1083,7 +1200,17 @@ async function alternarStatusProximo(osId) {
     os.status = 'Pronto para Retirada';
     tocarSomSucesso();
     // Se ficou pronto, já pergunta amigavelmente se quer mandar o zap agora
-    if (confirm(`Deseja avisar ${os.cliente_nome} no WhatsApp que o sapato está PRONTO agora?`)) {
+    const avisarPronto = await mostrarConfirmacaoApp(
+    `Deseja avisar ${os.cliente_nome} no WhatsApp que o calçado já está PRONTO agora?`,
+    {
+      titulo: '🟢 Calçado Pronto!',
+      icone: '👟',
+      txtConfirmar: 'Avisar no WhatsApp',
+      txtCancelar: 'Mais Tarde',
+      corConfirmar: '#16a34a'
+    }
+  );
+  if (avisarPronto) {
       enviarZapDireto(os.id);
     }
   } else if (os.status === 'Pronto para Retirada') {
@@ -1106,7 +1233,14 @@ async function receberEEntregar(osId) {
     msg = `Confirmar o recebimento de R$ ${os.valor_restante.toFixed(2).replace('.', ',')} em dinheiro/PIX e entregar o sapato?`;
   }
 
-  if (!confirm(msg)) return;
+  const confirmouEntrega = await mostrarConfirmacaoApp(msg, {
+    titulo: '🤝 Concluir e Entregar',
+    icone: '💰',
+    txtConfirmar: 'Sim, Entregar',
+    txtCancelar: 'Voltar',
+    corConfirmar: '#16a34a'
+  });
+  if (!confirmouEntrega) return;
 
   os.valor_entrada = os.valor_total;
   os.valor_restante = 0;
@@ -1115,7 +1249,7 @@ async function receberEEntregar(osId) {
 
   await salvarOS(os);
   tocarSomSucesso();
-  alert('Pronto! Sapato entregue e dinheiro registrado no caixa com sucesso.');
+  mostrarToast('Pronto! Sapato entregue e dinheiro registrado no caixa com sucesso.', '🎉');
   await carregarOrdens();
 }
 
@@ -1852,8 +1986,18 @@ function fecharModalPerfil(e) {
   if (modal) modal.classList.remove('open');
 }
 
-function fazerLogout() {
-  if (confirm('Deseja realmente sair e trocar de conta neste aparelho?')) {
+async function fazerLogout() {
+  const querSair = await mostrarConfirmacaoApp(
+    'Deseja realmente sair e trocar de conta neste aparelho?',
+    {
+      titulo: 'Encerrar Sessão',
+      icone: '🔒',
+      txtConfirmar: 'Sim, Trocar Conta',
+      txtCancelar: 'Continuar Conectado',
+      corConfirmar: '#dc2626'
+    }
+  );
+  if (querSair) {
     localStorage.removeItem('calce_auth_user');
     sessionStorage.removeItem('calce_auth_user');
     fecharModalPerfil();
@@ -1895,3 +2039,8 @@ window.capturarFotoWebcam = capturarFotoWebcam;
 window.confirmarFotoCapturada = confirmarFotoCapturada;
 window.acionarGaleriaFallback = acionarGaleriaFallback;
 window.fecharWebcamModal = fecharWebcamModal;
+
+
+window.mostrarAvisoApp = mostrarAvisoApp;
+window.mostrarConfirmacaoApp = mostrarConfirmacaoApp;
+window.mostrarToast = mostrarToast;
