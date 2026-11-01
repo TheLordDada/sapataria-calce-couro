@@ -713,6 +713,28 @@
   </div>
   </div>
 
+  
+  <!-- ============================================== -->
+  <!-- MODAL DE DIÁLOGO PRÓPRIO (SUBSTITUI O ALERT)  -->
+  <!-- ============================================== -->
+  <div class="modal-backdrop" id="modalDialogoApp">
+    <div class="modal-card modal-dialogo-card" onclick="event.stopPropagation()">
+      <div class="dialogo-icon-box" id="dialogoIconBox">👞</div>
+      <h3 class="dialogo-title" id="dialogoTitulo">Calce Couro</h3>
+      <p class="dialogo-message" id="dialogoMensagem">Mensagem aqui</p>
+      <div class="dialogo-actions-row" id="dialogoActionsRow">
+        <button type="button" class="btn-dialogo-cancel" id="btnDialogoCancelar" style="display: none;">Cancelar</button>
+        <button type="button" class="btn-dialogo-confirm" id="btnDialogoConfirmar">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST FLUTUANTE DE SUCESSO -->
+  <div id="toastApp" class="toast-app-banner">
+    <span id="toastAppIcon">✨</span>
+    <span id="toastAppMsg">Salvo com sucesso!</span>
+  </div>
+
   <!-- SCRIPTS -->
   <script src="db.js"></script>
   <script src="app.js"></script>
