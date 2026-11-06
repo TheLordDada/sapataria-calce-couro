@@ -861,6 +861,7 @@ async function salvarConserto(e) {
     };
   }
 
+  os.atendente = localStorage.getItem('calce_operador_nome') || 'Balcão';
   os.cliente_nome = clienteNome;
   os.cliente_whatsapp = clienteWhats;
   os.previsao_retirada_data = previsaoData;
@@ -1828,24 +1829,53 @@ window.tocarSomSucesso = tocarSomSucesso;
 
 
 // ==================================================
-// SISTEMA DE PROTECAO & CONTAS (OFICINA DOS PAIS & ADMINISTRADOR)
+// SISTEMA DE CONTAS PESSOAIS (HELEN, EMERSON, JÚNIOR)
 // ==================================================
-let perfilAuthSelecionado = 'pais';
+const CONTAS_USUARIOS = {
+  helen: {
+    id: 'helen',
+    nome: 'Helen',
+    papel: 'Atendimento & Balcão',
+    emoji: '👩',
+    senhasPadrao: ['112329', '1234'],
+    chaveStorage: 'calce_pin_helen'
+  },
+  emerson: {
+    id: 'emerson',
+    nome: 'Emerson',
+    papel: 'Oficina & Consertos',
+    emoji: '👨',
+    senhasPadrao: ['112329', '1234'],
+    chaveStorage: 'calce_pin_emerson'
+  },
+  junior: {
+    id: 'junior',
+    nome: 'Júnior',
+    papel: 'Acesso Geral',
+    emoji: '👦',
+    senhasPadrao: ['391586', '112329', 'admin'],
+    chaveStorage: 'calce_pin_junior'
+  }
+};
+
+let perfilAuthSelecionado = 'helen';
 
 function verificarAutenticacaoInicial() {
   const authSalvo = localStorage.getItem('calce_auth_user') || sessionStorage.getItem('calce_auth_user');
   if (authSalvo) {
     try {
       const u = JSON.parse(authSalvo);
-      aplicarContaConectada(u);
-      const overlay = document.getElementById('authOverlay');
-      if (overlay) overlay.style.display = 'none';
-      return true;
+      if (CONTAS_USUARIOS[u.id] || CONTAS_USUARIOS[u.perfil]) {
+        aplicarContaConectada(u);
+        const overlay = document.getElementById('authOverlay');
+        if (overlay) overlay.style.display = 'none';
+        return true;
+      }
     } catch(e) {}
   }
   const overlay = document.getElementById('authOverlay');
   if (overlay) overlay.style.display = 'flex';
-  selecionarPerfilAuth('pais');
+  selecionarPerfilAuth('helen');
   setTimeout(() => {
     const input = document.getElementById('inputAuthPin');
     if (input) input.focus();
@@ -1853,12 +1883,14 @@ function verificarAutenticacaoInicial() {
   return false;
 }
 
-function selecionarPerfilAuth(perfil) {
-  perfilAuthSelecionado = perfil;
-  const btnPais = document.getElementById('btnPerfilPais');
-  const btnAdmin = document.getElementById('btnPerfilAdmin');
+function selecionarPerfilAuth(usuarioId) {
+  if (!CONTAS_USUARIOS[usuarioId]) usuarioId = 'helen';
+  perfilAuthSelecionado = usuarioId;
+
+  const btnHelen = document.getElementById('btnPerfilHelen');
+  const btnEmerson = document.getElementById('btnPerfilEmerson');
+  const btnJunior = document.getElementById('btnPerfilJunior');
   const labelPin = document.getElementById('labelAuthPin');
-  const hint = document.getElementById('authHintText');
   const err = document.getElementById('authErrorMsg');
   const inputPin = document.getElementById('inputAuthPin');
 
@@ -1868,18 +1900,16 @@ function selecionarPerfilAuth(perfil) {
     inputPin.focus();
   }
 
-  if (perfil === 'pais') {
-    if (btnPais) btnPais.classList.add('active');
-    if (btnAdmin) btnAdmin.classList.remove('active');
-    if (labelPin) labelPin.textContent = 'Digite o PIN da Oficina (4 digitos):';
-    if (hint) hint.innerHTML = '💡 PIN padrao da Oficina: <strong>6049</strong> (ou 1234)';
-    if (inputPin) inputPin.setAttribute('inputmode', 'numeric');
-  } else {
-    if (btnAdmin) btnAdmin.classList.add('active');
-    if (btnPais) btnPais.classList.remove('active');
-    if (labelPin) labelPin.textContent = 'Senha / PIN do Administrador:';
-    if (hint) hint.innerHTML = '👑 Senha padrao do Administrador: <strong>admin</strong> (ou 9975)';
-    if (inputPin) inputPin.setAttribute('inputmode', 'text');
+  if (btnHelen) btnHelen.classList.toggle('active', usuarioId === 'helen');
+  if (btnEmerson) btnEmerson.classList.toggle('active', usuarioId === 'emerson');
+  if (btnJunior) btnJunior.classList.toggle('active', usuarioId === 'junior');
+
+  const u = CONTAS_USUARIOS[usuarioId];
+  if (labelPin && u) {
+    labelPin.textContent = 'Digite a senha de ' + u.nome + ':';
+  }
+  if (inputPin) {
+    inputPin.setAttribute('inputmode', 'numeric');
   }
 }
 
@@ -1902,28 +1932,19 @@ function executarLogin() {
   const lembrar = document.getElementById('chkLembrarAcesso') ? document.getElementById('chkLembrarAcesso').checked : true;
   const pinDigitado = (inputPin ? inputPin.value : '').trim().toLowerCase();
 
-  let autorizado = false;
-  let nomeExibicao = '';
+  const u = CONTAS_USUARIOS[perfilAuthSelecionado] || CONTAS_USUARIOS.helen;
+  const pinCustom = localStorage.getItem(u.chaveStorage);
 
-  if (perfilAuthSelecionado === 'pais') {
-    const pinCustom = localStorage.getItem('calce_pin_pais');
-    // Senha do Balcao da Oficina: 112329
-    if (pinDigitado === '112329' || pinDigitado === '6049' || pinDigitado === '1234' || (pinCustom && pinDigitado === pinCustom)) {
-      autorizado = true;
-      nomeExibicao = 'Balcão da Oficina';
-    }
-  } else {
-    const pinCustom = localStorage.getItem('calce_pin_admin');
-    // Senha de Administrador: 391586
-    if (pinDigitado === '391586' || pinDigitado === 'admin' || pinDigitado === 'admin2026' || (pinCustom && pinDigitado === pinCustom)) {
-      autorizado = true;
-      nomeExibicao = 'Administrador Geral';
-    }
+  let autorizado = false;
+  if (pinCustom && pinDigitado === pinCustom.trim().toLowerCase()) {
+    autorizado = true;
+  } else if (u.senhasPadrao.some(s => s.toLowerCase() === pinDigitado)) {
+    autorizado = true;
   }
 
   if (!autorizado) {
     if (err) {
-      err.textContent = perfilAuthSelecionado === 'pais' ? 'Senha do Balcão incorreta. Digite 112329.' : 'Senha de ADM incorreta. Digite 391586.';
+      err.textContent = 'Senha incorreta para ' + u.nome + '. Tente novamente.';
       err.style.display = 'block';
     }
     if (inputPin) {
@@ -1934,8 +1955,11 @@ function executarLogin() {
   }
 
   const dadosUsuario = {
-    perfil: perfilAuthSelecionado,
-    nome: nomeExibicao,
+    id: u.id,
+    perfil: u.id,
+    nome: u.nome,
+    emoji: u.emoji,
+    papel: u.papel,
     login_em: new Date().toISOString()
   };
 
@@ -1950,30 +1974,31 @@ function executarLogin() {
   if (overlay) overlay.style.display = 'none';
 
   if (window.tocarSomSucesso) tocarSomSucesso();
-  if (window.mostrarNotificacaoToast) {
-    mostrarNotificacaoToast('Bem-vindo, ' + nomeExibicao + '!', 'fa-circle-check', '#10b981');
+  if (window.mostrarToast) {
+    mostrarToast('Olá, ' + u.nome + '! Bom trabalho!', u.emoji);
   }
 }
 
 function aplicarContaConectada(u) {
-  localStorage.setItem('calce_operador_nome', u.nome || (u.perfil === 'admin' ? 'Administrador' : 'Oficina (Pais)'));
+  const id = u.id || u.perfil || 'helen';
+  const conta = CONTAS_USUARIOS[id] || { nome: u.nome || 'Helen', emoji: u.emoji || '👩', papel: u.papel || 'Atendente' };
+
+  localStorage.setItem('calce_operador_nome', conta.nome);
+  localStorage.setItem('calce_operador_id', id);
 
   const iconH = document.getElementById('headerPerfilIcon');
   const labelH = document.getElementById('labelNomeOperador');
+  const modalEmoji = document.getElementById('modalPerfilEmoji');
+  const modalTitulo = document.getElementById('modalPerfilTitulo');
   const badgeM = document.getElementById('perfilRoleBadge');
   const descM = document.getElementById('perfilDescricao');
 
-  if (u.perfil === 'admin') {
-    if (iconH) iconH.textContent = '👑';
-    if (labelH) labelH.textContent = 'Admin';
-    if (badgeM) badgeM.textContent = '👑 Administrador';
-    if (descM) descM.textContent = 'Acesso administrativo completo: supervisao, ajuda e atualizacoes.';
-  } else {
-    if (iconH) iconH.textContent = '🛠️';
-    if (labelH) labelH.textContent = 'Oficina';
-    if (badgeM) badgeM.textContent = '🛠️ Oficina & Balcão';
-    if (descM) descM.textContent = 'Acesso operacional da oficina dos pais para registrar consertos e entregas.';
-  }
+  if (iconH) iconH.textContent = conta.emoji;
+  if (labelH) labelH.textContent = conta.nome;
+  if (modalEmoji) modalEmoji.textContent = conta.emoji;
+  if (modalTitulo) modalTitulo.textContent = 'Conta de ' + conta.nome;
+  if (badgeM) badgeM.textContent = conta.emoji + ' ' + conta.nome + ' (' + conta.papel + ')';
+  if (descM) descM.textContent = 'Conectado(a) como ' + conta.nome + ' no aplicativo da Sapataria Calce Couro.';
 }
 
 function abrirModalPerfil() {
@@ -1982,19 +2007,35 @@ function abrirModalPerfil() {
 }
 
 function fecharModalPerfil(e) {
+  if (e && e.target && e.target !== document.getElementById('modalPerfilUsuario')) return;
   const modal = document.getElementById('modalPerfilUsuario');
   if (modal) modal.classList.remove('open');
+}
+
+async function alterarSenhaUsuarioAtual() {
+  const idAtual = localStorage.getItem('calce_operador_id') || 'helen';
+  const u = CONTAS_USUARIOS[idAtual] || CONTAS_USUARIOS.helen;
+
+  const novaSenha = prompt('Digite a nova senha para ' + u.nome + ' (ou deixe em branco para cancelar):');
+  if (!novaSenha || !novaSenha.trim()) return;
+
+  localStorage.setItem(u.chaveStorage, novaSenha.trim());
+  if (window.mostrarToast) {
+    mostrarToast('Senha de ' + u.nome + ' alterada com sucesso!', '🔑');
+  } else {
+    alert('Senha de ' + u.nome + ' alterada com sucesso!');
+  }
 }
 
 async function fazerLogout() {
   const querSair = await mostrarConfirmacaoApp(
     'Deseja realmente sair e trocar de conta neste aparelho?',
     {
-      titulo: 'Encerrar Sessão',
-      icone: '🔒',
+      titulo: 'Trocar Usuário',
+      icone: '🚪',
       txtConfirmar: 'Sim, Trocar Conta',
       txtCancelar: 'Continuar Conectado',
-      corConfirmar: '#dc2626'
+      corConfirmar: '#2b1d1a'
     }
   );
   if (querSair) {
@@ -2044,3 +2085,5 @@ window.fecharWebcamModal = fecharWebcamModal;
 window.mostrarAvisoApp = mostrarAvisoApp;
 window.mostrarConfirmacaoApp = mostrarConfirmacaoApp;
 window.mostrarToast = mostrarToast;
+
+window.alterarSenhaUsuarioAtual = alterarSenhaUsuarioAtual;
