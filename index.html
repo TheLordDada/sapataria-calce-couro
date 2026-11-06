@@ -477,10 +477,14 @@
           <div class="perfil-card-badge" id="perfilRoleBadge">🛠️ Oficina & Balcão</div>
           <p id="perfilDescricao" style="margin-top: 8px; font-size: 13px; color: #6b5c58;">Acesso da oficina dos pais para registrar consertos e entregas.</p>
         </div>
-        <div class="perfil-actions" style="margin-top: 20px;">
+        <div class="perfil-actions" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" class="btn-change-pin" onclick="alterarSenhaUsuarioAtual()" style="background: #faf4ed; color: #2b1d1a; border: 1.5px solid #dcd2c7; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 13.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fa-solid fa-key"></i>
+            <span>Trocar Minha Senha</span>
+          </button>
           <button type="button" class="btn-logout" onclick="fazerLogout()">
             <i class="fa-solid fa-arrow-right-from-bracket"></i>
-            <span>Trocar de Conta / Desconectar</span>
+            <span>Trocar de Conta / Sair</span>
           </button>
         </div>
       </div>
@@ -496,23 +500,32 @@
         <p>Acesso Seguro ao Sistema</p>
       </div>
 
-      <div class="auth-profiles-title">Quem esta acessando agora?</div>
+      <div class="auth-profiles-title">Quem está usando o aplicativo agora?</div>
 
       <div class="auth-profiles-grid">
-        <button type="button" class="btn-profile-card active" id="btnPerfilPais" onclick="selecionarPerfilAuth('pais')">
-          <div class="p-icon">🛠️</div>
+        <button type="button" class="btn-profile-card active" id="btnPerfilHelen" onclick="selecionarPerfilAuth('helen')">
+          <div class="p-icon">👩</div>
           <div class="p-info">
-            <strong>Oficina & Balcão</strong>
-            <span>Celular dos Pais / Loja</span>
+            <strong>Helen</strong>
+            <span>Atendimento & Balcão</span>
           </div>
           <i class="fa-solid fa-circle-check p-check"></i>
         </button>
 
-        <button type="button" class="btn-profile-card" id="btnPerfilAdmin" onclick="selecionarPerfilAuth('admin')">
-          <div class="p-icon">👑</div>
+        <button type="button" class="btn-profile-card" id="btnPerfilEmerson" onclick="selecionarPerfilAuth('emerson')">
+          <div class="p-icon">👨</div>
           <div class="p-info">
-            <strong>Administrador</strong>
-            <span>Supervisao, Ajuda & Atualizacoes</span>
+            <strong>Emerson</strong>
+            <span>Oficina & Consertos</span>
+          </div>
+          <i class="fa-solid fa-circle-check p-check"></i>
+        </button>
+
+        <button type="button" class="btn-profile-card" id="btnPerfilJunior" onclick="selecionarPerfilAuth('junior')">
+          <div class="p-icon">👦</div>
+          <div class="p-info">
+            <strong>Júnior</strong>
+            <span>Acesso Geral</span>
           </div>
           <i class="fa-solid fa-circle-check p-check"></i>
         </button>
@@ -542,9 +555,7 @@
         <span>ENTRAR NO SISTEMA</span>
       </button>
 
-      <div class="auth-footer-help">
-        <span id="authHintText">💡 Senha do Balcão: <strong>112329</strong></span>
-      </div>
+      
     </div>
   </div>
   
